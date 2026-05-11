@@ -1,38 +1,68 @@
-const KEY = "bookmarks";
+import { supabase } from '../supabaseClient';
 
-// get bookmarks
-export const getBookmarks = () => {
-  const data = localStorage.getItem(KEY);
-  return data ? JSON.parse(data) : [];
-};
-
-// save bookmarks
-const saveBookmarks = (jobs) => {
-  localStorage.setItem(KEY, JSON.stringify(jobs));
-};
-
-// toggle bookmark
-export const toggleBookmark = (job) => {
-  let jobs = getBookmarks();
-
-  const exists = jobs.find((j) => j.id === job.id);
-
-  if (exists) {
-    jobs = jobs.filter((j) => j.id !== job.id);
-  } else {
-    jobs.push(job);
+// Get bookmarks from Supabase
+export const getBookmarks = async (userEmail) => {
+  try {
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .select('*')
+      .eq('user_email', userEmail);
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error loading bookmarks:", error);
+    return [];
   }
-
-  saveBookmarks(jobs);
 };
 
-// check bookmark
-export const isBookmarked = (id) => {
-  const jobs = getBookmarks();
-  return jobs.some((j) => j.id === id);
+// Toggle bookmark in Supabase
+export const toggleBookmark = async (job, userEmail) => {
+  try {
+    const { data: existing } = await supabase
+      .from('bookmarks')
+      .select('id')
+      .eq('job_id', job.id)
+      .eq('user_email', userEmail);
+    
+    if (existing && existing.length > 0) {
+      await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('id', existing[0].id);
+      return false;
+    } else {
+      await supabase
+        .from('bookmarks')
+        .insert([{
+          user_email: userEmail,
+          job_id: job.id,
+          created_at: new Date().toISOString()
+        }]);
+      return true;
+    }
+  } catch (error) {
+    console.error("Error toggling bookmark:", error);
+    return false;
+  }
 };
 
-// ✅ ADD THIS (FIX FOR YOUR ERROR)
-export const getBookmarkedJobs = () => {
-  return getBookmarks();
+// Check if bookmarked
+export const isBookmarked = async (jobId, userEmail) => {
+  try {
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .select('id')
+      .eq('job_id', jobId)
+      .eq('user_email', userEmail);
+    
+    if (error) throw error;
+    return data && data.length > 0;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const getBookmarkedJobs = async (userEmail) => {
+  return await getBookmarks(userEmail);
 };

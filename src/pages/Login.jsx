@@ -11,19 +11,23 @@ export default function Login() {
     password: "",
     role: "user",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    const user = loginUser(form.email, form.password);
+    setLoading(true);
+    
+    const user = await loginUser(form.email, form.password);
 
     if (!user) {
       alert("Invalid email or password");
+      setLoading(false);
       return;
     }
 
     if (user.role !== form.role) {
       alert("Selected role does not match account type");
+      setLoading(false);
       return;
     }
 
@@ -32,6 +36,7 @@ export default function Login() {
     } else {
       navigate("/");
     }
+    setLoading(false);
   };
 
   return (
@@ -41,34 +46,24 @@ export default function Login() {
       <div className="max-w-md mx-auto bg-white p-6 mt-10 rounded-xl shadow">
         <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
 
-        {/* ROLE TOGGLE (LIKE SIGNUP) */}
         <div className="flex justify-center gap-4 mb-4">
           <button
             type="button"
             onClick={() => setForm({ ...form, role: "user" })}
-            className={`px-4 py-1 rounded ${
-              form.role === "user" ? "bg-orange-600 text-white" : "bg-gray-200"
-            }`}
+            className={`px-4 py-1 rounded ${form.role === "user" ? "bg-orange-600 text-white" : "bg-gray-200"}`}
           >
             User
           </button>
-
           <button
             type="button"
             onClick={() => setForm({ ...form, role: "company" })}
-            className={`px-4 py-1 rounded ${
-              form.role === "company"
-                ? "bg-orange-600 text-white"
-                : "bg-gray-200"
-            }`}
+            className={`px-4 py-1 rounded ${form.role === "company" ? "bg-orange-600 text-white" : "bg-gray-200"}`}
           >
             Company
           </button>
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          {/* EMAIL */}
           <input
             type="email"
             placeholder="Email"
@@ -76,8 +71,6 @@ export default function Login() {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
-
-          {/* PASSWORD */}
           <input
             type="password"
             placeholder="Password"
@@ -85,9 +78,8 @@ export default function Login() {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
           />
-
-          <button className="bg-orange-600 text-white py-2 rounded-lg">
-            Login
+          <button type="submit" className="bg-orange-600 text-white py-2 rounded-lg" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>

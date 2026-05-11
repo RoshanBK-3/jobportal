@@ -1,3 +1,4 @@
+// In-memory store for applications (demo purposes)
 let applications = [];
 
 export const addApplication = (app) => {

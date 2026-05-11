@@ -3,27 +3,47 @@ import { useState, useEffect } from "react";
 import { toggleBookmark, isBookmarked } from "../data/bookmarks";
 import { isLoggedIn, getCurrentUser } from "../utils/auth";
 import { deleteJob } from "../data/jobs";
+import { supabase } from "../supabaseClient";
 
 export function JobCard({ job }) {
   const navigate = useNavigate();
   const [bookmarked, setBookmarked] = useState(false);
-
   const user = getCurrentUser();
   const isCompany = user?.role === "company";
+  const [hasAppliedToJob, setHasAppliedToJob] = useState(false);
 
   // Check if user has applied to this job
-  const hasApplied = () => {
-    if (isCompany) return false;
-    let appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
-    if (!Array.isArray(appliedJobs)) appliedJobs = [];
-    return appliedJobs.some(
-      (j) => j.id === job.id && j.appliedBy === user?.email,
-    );
-  };
+  useEffect(() => {
+    const checkApplied = async () => {
+      if (isCompany || !user?.email) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('applications')
+          .select('id')
+          .eq('job_id', job.id)
+          .eq('applied_by', user.email);
+        
+        if (!error && data && data.length > 0) {
+          setHasAppliedToJob(true);
+        }
+      } catch (error) {
+        console.error("Error checking application:", error);
+      }
+    };
+    
+    checkApplied();
+  }, [job.id, user?.email, isCompany]);
 
   useEffect(() => {
-    setBookmarked(isBookmarked(job.id));
-  }, [job.id]);
+    const checkBookmark = async () => {
+      if (user?.email) {
+        const bookmarkedStatus = await isBookmarked(job.id, user.email);
+        setBookmarked(bookmarkedStatus);
+      }
+    };
+    checkBookmark();
+  }, [job.id, user?.email]);
 
   const formatDate = (date) => {
     if (!date) return "Recently";
@@ -34,23 +54,21 @@ export function JobCard({ job }) {
     });
   };
 
-  const handleBookmark = (e) => {
+  const handleBookmark = async (e) => {
     e.stopPropagation();
-
     if (!isLoggedIn()) {
       alert("Please login to bookmark jobs");
       navigate("/login");
       return;
     }
-
-    toggleBookmark(job);
-    setBookmarked(!bookmarked);
+    const newStatus = await toggleBookmark(job, user.email);
+    setBookmarked(newStatus);
   };
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this job?")) {
-      deleteJob(job.id);
+      await deleteJob(job.id);
       window.location.reload();
     }
   };
@@ -60,7 +78,6 @@ export function JobCard({ job }) {
       onClick={() => !isCompany && navigate(`/job/${job.id}`)}
       className="relative bg-white rounded-xl shadow-sm p-5 hover:shadow-lg transition cursor-pointer"
     >
-      {/* BOOKMARK BUTTON - Fixed positioning */}
       {!isCompany && (
         <button
           onClick={handleBookmark}
@@ -73,42 +90,25 @@ export function JobCard({ job }) {
         </button>
       )}
 
-      {/* CONTENT - Added padding-right to prevent overlap with bookmark */}
       <div className="pr-8">
-        {/* TITLE */}
-        <h3 className="text-lg font-semibold text-gray-800 pr-4">
-          {job.title}
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800 pr-4">{job.title}</h3>
+        <p className="text-sm text-gray-500">{job.company} • {job.location}</p>
 
-        {/* COMPANY + LOCATION */}
-        <p className="text-sm text-gray-500">
-          {job.company} • {job.location}
-        </p>
-
-        {/* SKILLS */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          {job.skills.map((skill, index) => (
-            <span
-              key={index}
-              className="bg-purple-100 text-xs px-2 py-1 rounded"
-            >
+          {job.skills?.map((skill, index) => (
+            <span key={index} className="bg-purple-100 text-xs px-2 py-1 rounded">
               {skill}
             </span>
           ))}
         </div>
 
-        {/* POSTED DATE */}
         <p className="text-xs text-gray-400 mt-1">
           Posted on {formatDate(job.createdAt || job.postedDate)}
         </p>
 
-        {/* BUTTON AREA */}
         {!isCompany ? (
-          hasApplied() ? (
-            <button
-              disabled
-              className="mt-5 w-full bg-green-500 text-white py-2 rounded-lg cursor-not-allowed"
-            >
+          hasAppliedToJob ? (
+            <button disabled className="mt-5 w-full bg-green-500 text-white py-2 rounded-lg cursor-not-allowed">
               ✅ Applied
             </button>
           ) : (
@@ -129,13 +129,13 @@ export function JobCard({ job }) {
                 e.stopPropagation();
                 navigate(`/edit-job/${job.id}`);
               }}
-              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+              className="flex-1 bg-gray-400 text-green-400 py-2 rounded-lg hover:bg-gray-500 transition"
             >
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
+              className="flex-1 bg-gray-400 text-red-500 py-2 rounded-lg hover:bg-gray-500 transition"
             >
               Delete
             </button>

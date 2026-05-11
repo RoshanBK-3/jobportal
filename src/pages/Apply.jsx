@@ -7,7 +7,6 @@ import { addApplication } from "../data/applications";
 export default function Apply() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const jobs = getJobs();
   const job = jobs.find((j) => j.id === Number(id));
 
@@ -41,7 +40,7 @@ export default function Apply() {
       <Navbar />
 
       <div className="max-w-xl mx-auto bg-white p-6 mt-10 rounded-xl shadow">
-        <h2 className="text-xl font-bold mb-4">Apply for {job.title}</h2>
+        <h2 className="text-xl font-bold mb-4">Apply for {job?.title}</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
@@ -50,7 +49,6 @@ export default function Apply() {
             className="border p-2 rounded"
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-
           <input
             required
             type="number"
@@ -58,14 +56,12 @@ export default function Apply() {
             className="border p-2 rounded"
             onChange={(e) => setForm({ ...form, age: e.target.value })}
           />
-
           <input
             required
             placeholder="Phone"
             className="border p-2 rounded"
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
           />
-
           <input
             required
             type="email"
@@ -73,7 +69,6 @@ export default function Apply() {
             className="border p-2 rounded"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-
           <select
             required
             className="border p-2 rounded"
@@ -83,8 +78,6 @@ export default function Apply() {
             <option>Male</option>
             <option>Female</option>
           </select>
-
-          {/* Work Link */}
           <input
             required
             type="url"
@@ -92,8 +85,6 @@ export default function Apply() {
             className="border p-2 rounded"
             onChange={(e) => setForm({ ...form, workLink: e.target.value })}
           />
-
-          {/* Experience */}
           <select
             required
             className="border p-2 rounded"
@@ -108,7 +99,6 @@ export default function Apply() {
             <option>3 Years</option>
             <option>5+ Years</option>
           </select>
-
           <button className="bg-purple-600 text-white py-2 rounded-lg">
             Submit Application
           </button>

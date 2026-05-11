@@ -3,144 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { getJobs } from "../data/jobs";
 import { isLoggedIn, getCurrentUser } from "../utils/auth";
-
-const APPLIED_KEY = "appliedJobs";
-
-// Clean old/invalid applied jobs - NEVER touches users_db
-const cleanAppliedJobs = () => {
-  try {
-    let appliedJobs = JSON.parse(localStorage.getItem(APPLIED_KEY)) || [];
-
-    // Ensure it's an array
-    if (!Array.isArray(appliedJobs)) {
-      appliedJobs = [];
-      localStorage.setItem(APPLIED_KEY, JSON.stringify(appliedJobs));
-      return [];
-    }
-
-    // Remove any invalid entries (jobs without required fields)
-    const validJobs = appliedJobs.filter(
-      (job) => job && job.id && job.appliedBy,
-    );
-
-    // Limit to last 100 applications to prevent storage issues
-    const limitedJobs = validJobs.slice(-100);
-
-    if (
-      validJobs.length !== appliedJobs.length ||
-      limitedJobs.length !== validJobs.length
-    ) {
-      localStorage.setItem(APPLIED_KEY, JSON.stringify(limitedJobs));
-      return limitedJobs;
-    }
-
-    return validJobs;
-  } catch (error) {
-    console.error("Error cleaning applied jobs:", error);
-    // ONLY reset appliedJobs, NEVER touch users_db
-    localStorage.setItem(APPLIED_KEY, JSON.stringify([]));
-    return [];
-  }
-};
-
-// Save applied job with minimal data
-const saveAppliedJob = (userEmail, job) => {
-  try {
-    let appliedJobs = cleanAppliedJobs();
-
-    // Check if already applied
-    const alreadyApplied = appliedJobs.some(
-      (j) => j.id === job.id && j.appliedBy === userEmail,
-    );
-
-    if (alreadyApplied) {
-      return false;
-    }
-
-    // Get current user's basic info
-    const currentUser = getCurrentUser();
-
-    // Create minimal application data (no heavy base64 data)
-    const newApplication = {
-      id: job.id,
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      skills: job.skills || [],
-      description: job.description ? job.description.substring(0, 500) : "", // Limit description length
-      appliedBy: userEmail,
-      appliedAt: new Date().toISOString(),
-      applicantName: currentUser?.name || userEmail.split("@")[0],
-      hasProfilePic: !!currentUser?.profilePic,
-      hasCV: !!currentUser?.cv,
-    };
-
-    appliedJobs.push(newApplication);
-
-    // Keep only last 100 applications
-    if (appliedJobs.length > 100) {
-      appliedJobs = appliedJobs.slice(-100);
-    }
-
-    const serialized = JSON.stringify(appliedJobs);
-
-    // Check storage size (limit to 3MB)
-    if (serialized.length > 3 * 1024 * 1024) {
-      // Remove oldest 50 applications and try again
-      const reducedJobs = appliedJobs.slice(-50);
-      const reducedSerialized = JSON.stringify(reducedJobs);
-
-      if (reducedSerialized.length < 3 * 1024 * 1024) {
-        localStorage.setItem(APPLIED_KEY, reducedSerialized);
-        return true;
-      } else {
-        alert(
-          "Storage limit reached. Please clear some old applications from your dashboard.",
-        );
-        return false;
-      }
-    }
-
-    localStorage.setItem(APPLIED_KEY, serialized);
-    return true;
-  } catch (error) {
-    if (error.name === "QuotaExceededError") {
-      alert("Storage is full. Please clear your browser data for this site.");
-      // Only reset appliedJobs
-      localStorage.setItem(APPLIED_KEY, JSON.stringify([]));
-      // Try saving again with just this application
-      try {
-        const newApplication = {
-          id: job.id,
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          skills: job.skills || [],
-          appliedBy: userEmail,
-          appliedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(APPLIED_KEY, JSON.stringify([newApplication]));
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    console.error("Error saving application:", error);
-    alert("Failed to apply. Please try again.");
-    return false;
-  }
-};
-
-// Check if user already applied
-const hasApplied = (userEmail, jobId) => {
-  try {
-    const appliedJobs = cleanAppliedJobs();
-    return appliedJobs.some((j) => j.id === jobId && j.appliedBy === userEmail);
-  } catch (error) {
-    console.error("Error checking application status:", error);
-    return false;
-  }
-};
+import { supabase } from "../supabaseClient";
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -153,26 +16,57 @@ export default function JobDetails() {
 
   // Load job data
   useEffect(() => {
-    try {
-      const jobs = getJobs();
-      const foundJob = jobs.find((j) => j.id === Number(id));
-      setJob(foundJob);
-    } catch (error) {
-      console.error("Error loading job:", error);
-    } finally {
-      setLoading(false);
-    }
+    const loadJob = async () => {
+      try {
+        setLoading(true);
+        const jobs = await getJobs();
+        
+        if (!jobs || !Array.isArray(jobs)) {
+          setJob(null);
+          setLoading(false);
+          return;
+        }
+        
+        const foundJob = jobs.find((j) => String(j.id) === String(id));
+        setJob(foundJob || null);
+      } catch (error) {
+        console.error("Error loading job:", error);
+        setJob(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadJob();
   }, [id]);
 
-  // Check application status when component loads
+  // Check if user already applied
   useEffect(() => {
-    const user = getCurrentUser();
-    setCurrentUser(user);
-
-    if (user && job) {
-      const applied = hasApplied(user.email, job.id);
-      setHasAppliedToJob(applied);
-    }
+    const checkApplicationStatus = async () => {
+      const user = getCurrentUser();
+      setCurrentUser(user);
+      
+      if (user && job) {
+        try {
+          const { data, error } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('job_id', job.id)
+            .eq('applied_by', user.email);
+          
+          if (!error && data && data.length > 0) {
+            setHasAppliedToJob(true);
+          } else {
+            setHasAppliedToJob(false);
+          }
+        } catch (error) {
+          console.error("Error checking application status:", error);
+          setHasAppliedToJob(false);
+        }
+      }
+    };
+    
+    checkApplicationStatus();
   }, [job]);
 
   const handleApply = async () => {
@@ -201,16 +95,35 @@ export default function JobDetails() {
     setIsApplying(true);
 
     try {
-      const applied = saveAppliedJob(user.email, job);
-
-      if (applied) {
-        setHasAppliedToJob(true);
-        alert(
-          "Applied Successfully, you'll be notified through e-mail about selection",
-        );
-      } else {
+      // Check if already applied
+      const { data: existing } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', job.id)
+        .eq('applied_by', user.email);
+      
+      if (existing && existing.length > 0) {
         alert("You have already applied for this job!");
+        setIsApplying(false);
+        return;
       }
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('applications')
+        .insert([{
+          job_id: job.id,
+          job_title: job.title,
+          job_company: job.company,
+          job_location: job.location,
+          applied_by: user.email,
+          applied_at: new Date().toISOString()
+        }]);
+      
+      if (error) throw error;
+      
+      setHasAppliedToJob(true);
+      alert("Applied Successfully! You'll be notified via email about selection.");
     } catch (error) {
       console.error("Apply error:", error);
       alert("Failed to apply. Please try again.");
@@ -232,7 +145,15 @@ export default function JobDetails() {
     return (
       <div className="bg-gray-50 min-h-screen">
         <Navbar />
-        <p className="text-center mt-10">Job not found</p>
+        <div className="text-center py-20">
+          <p className="text-gray-500 text-lg">Job not found</p>
+          <button 
+            onClick={() => navigate("/")}
+            className="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+          >
+            Back to Home
+          </button>
+        </div>
       </div>
     );
   }
@@ -249,15 +170,14 @@ export default function JobDetails() {
         </p>
 
         <div className="flex gap-2 mb-4 flex-wrap">
-          {job.skills &&
-            job.skills.map((skill, index) => (
-              <span
-                key={index}
-                className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs"
-              >
-                {skill}
-              </span>
-            ))}
+          {job.skills && job.skills.map((skill, index) => (
+            <span
+              key={index}
+              className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs"
+            >
+              {skill}
+            </span>
+          ))}
         </div>
 
         <p className="text-gray-700 mb-6">{job.description}</p>
@@ -269,15 +189,11 @@ export default function JobDetails() {
             hasAppliedToJob
               ? "bg-green-500 text-white cursor-not-allowed"
               : isApplying
-                ? "bg-gray-400 text-white cursor-wait"
-                : "bg-purple-600 text-white hover:bg-purple-700"
+              ? "bg-gray-400 text-white cursor-wait"
+              : "bg-purple-600 text-white hover:bg-purple-700"
           }`}
         >
-          {hasAppliedToJob
-            ? "✅ Applied"
-            : isApplying
-              ? "Applying..."
-              : "Apply Now"}
+          {hasAppliedToJob ? "✅ Applied" : isApplying ? "Applying..." : "Apply Now"}
         </button>
       </div>
     </div>

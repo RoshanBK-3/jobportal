@@ -1,43 +1,52 @@
-const APPLIED_KEY = "appliedJobs";
+import { supabase } from '../supabaseClient';
 
-// Get applied jobs for current user
-export const getAppliedJobs = (userEmail) => {
-  const data = localStorage.getItem(APPLIED_KEY);
-  let appliedJobs = data ? JSON.parse(data) : [];
-  
-  // Ensure it's an array
-  if (!Array.isArray(appliedJobs)) {
-    appliedJobs = [];
-    localStorage.setItem(APPLIED_KEY, JSON.stringify(appliedJobs));
+// Get applied jobs from Supabase
+export const getAppliedJobs = async (userEmail) => {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('applied_by', userEmail)
+      .order('applied_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error loading applications:", error);
+    return [];
   }
-  
-  // Filter for current user if email provided
-  if (userEmail) {
-    return appliedJobs.filter(job => job.appliedBy === userEmail);
-  }
-  
-  return appliedJobs;
 };
 
-// Save applied jobs
-const saveAppliedJobs = (jobs) => {
-  localStorage.setItem(APPLIED_KEY, JSON.stringify(jobs));
-};
-
-// Apply to job
-export const applyJob = (job, userEmail) => {
-  const jobs = getAppliedJobs();
-  
-  // prevent duplicate apply
-  const alreadyApplied = jobs.find((j) => j.id === job.id && j.appliedBy === userEmail);
-  if (alreadyApplied) return false;
-  
-  jobs.push({
-    ...job,
-    appliedBy: userEmail,
-    appliedAt: new Date().toISOString(),
-  });
-  
-  saveAppliedJobs(jobs);
-  return true;
+// Save applied job to Supabase
+export const applyJob = async (job, userEmail) => {
+  try {
+    // Check if already applied
+    const { data: existing } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('job_id', job.id)
+      .eq('applied_by', userEmail);
+    
+    if (existing && existing.length > 0) {
+      return false;
+    }
+    
+    // Save new application
+    const { error } = await supabase
+      .from('applications')
+      .insert([{
+        job_id: job.id,
+        job_title: job.title,
+        job_company: job.company,
+        job_location: job.location,
+        applied_by: userEmail,
+        applied_at: new Date().toISOString()
+      }]);
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error saving application:", error);
+    return false;
+  }
 };

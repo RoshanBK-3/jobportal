@@ -7,8 +7,9 @@ import { getCurrentUser } from "../utils/auth";
 export default function AddJob() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [loading, setLoading] = useState(false);
 
-  // 🔒 PROTECT ROUTE (ONLY COMPANY)
+  // Restrict access to companies only
   if (!user || user.role !== "company") {
     return (
       <div className="p-6">
@@ -20,7 +21,6 @@ export default function AddJob() {
     );
   }
 
-  // ✅ STATES
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [skills, setSkills] = useState("");
@@ -28,15 +28,11 @@ export default function AddJob() {
   const [salary, setSalary] = useState("");
   const [description, setDescription] = useState("");
 
-  // ✅ SUBMIT HANDLER
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 🔥 FIX: Use createdAt field (consistent with jobs.js)
-    const now = new Date();
+    setLoading(true);
 
     const newJob = {
-      id: Date.now(),
       title,
       company: user.companyName,
       location,
@@ -45,19 +41,12 @@ export default function AddJob() {
       salary,
       description,
       createdBy: user.email,
-      createdAt: now.toISOString(), // 🔥 Use ISO string for sorting
-      postedDate: now.toDateString(), // Keep for display (optional)
-      postedTime: now.toLocaleTimeString(), // Keep for display (optional)
     };
 
-    addJob(newJob);
-
+    await addJob(newJob);
     alert("Job posted successfully!");
-
-    // 🔄 Force refresh-like behavior
-    window.dispatchEvent(new Event("jobsUpdated"));
-
     navigate("/company-home");
+    setLoading(false);
   };
 
   return (
@@ -70,7 +59,6 @@ export default function AddJob() {
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* TITLE */}
           <input
             type="text"
             placeholder="Job Title (e.g. Frontend Developer)"
@@ -79,8 +67,6 @@ export default function AddJob() {
             onChange={(e) => setTitle(e.target.value)}
             required
           />
-
-          {/* LOCATION */}
           <input
             type="text"
             placeholder="Location (e.g. Kathmandu)"
@@ -89,8 +75,6 @@ export default function AddJob() {
             onChange={(e) => setLocation(e.target.value)}
             required
           />
-
-          {/* SKILLS */}
           <input
             type="text"
             placeholder="Skills (React, Node, HTML)"
@@ -99,8 +83,6 @@ export default function AddJob() {
             onChange={(e) => setSkills(e.target.value)}
             required
           />
-
-          {/* JOB TYPE */}
           <select
             className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
             value={type}
@@ -112,8 +94,6 @@ export default function AddJob() {
             <option>Full-Time</option>
             <option>Part-Time</option>
           </select>
-
-          {/* SALARY */}
           <input
             type="text"
             placeholder="Salary (optional)"
@@ -121,8 +101,6 @@ export default function AddJob() {
             value={salary}
             onChange={(e) => setSalary(e.target.value)}
           />
-
-          {/* DESCRIPTION */}
           <textarea
             placeholder="Job Description"
             className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -131,13 +109,12 @@ export default function AddJob() {
             required
             rows="4"
           />
-
-          {/* SUBMIT */}
           <button
             type="submit"
-            className="bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 active:scale-95 transition"
+            className="bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
+            disabled={loading}
           >
-            Post Job
+            {loading ? "Posting..." : "Post Job"}
           </button>
         </form>
       </div>
