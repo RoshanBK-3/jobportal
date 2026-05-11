@@ -12,44 +12,45 @@ export default function Login() {
     role: "user",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     
-    console.log("=== LOGIN ATTEMPT ===");
-    console.log("Email entered:", form.email);
-    console.log("Password entered:", form.password);
-    console.log("Role selected:", form.role);
+    console.log("Attempting login with:", form.email);
     
-    const user = await loginUser(form.email, form.password);
-    
-    console.log("User returned from loginUser:", user);
+    try {
+      const user = await loginUser(form.email, form.password);
+      console.log("Login result:", user);
 
-    if (!user) {
-      alert("Invalid email or password");
+      if (!user) {
+        setError("Invalid email or password");
+        setLoading(false);
+        return;
+      }
+
+      if (user.role !== form.role) {
+        setError(`Selected role (${form.role}) does not match account type (${user.role})`);
+        setLoading(false);
+        return;
+      }
+
+      // Success - redirect
+      console.log("Redirecting to:", user.role === "company" ? "/company-home" : "/");
+      
+      if (user.role === "company") {
+        window.location.href = "/company-home";
+      } else {
+        window.location.href = "/";
+      }
+      
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
       setLoading(false);
-      return;
     }
-
-    console.log("User role from DB:", user.role);
-    console.log("Selected role:", form.role);
-    console.log("Roles match?", user.role === form.role);
-
-    if (user.role !== form.role) {
-      alert(`Selected role (${form.role}) does not match account type (${user.role})`);
-      setLoading(false);
-      return;
-    }
-
-    console.log("Navigating to:", user.role === "company" ? "/company-home" : "/");
-    
-    if (user.role === "company") {
-      navigate("/company-home");
-    } else {
-      navigate("/");
-    }
-    setLoading(false);
   };
 
   return (
@@ -58,6 +59,12 @@ export default function Login() {
 
       <div className="max-w-md mx-auto bg-white p-6 mt-10 rounded-xl shadow">
         <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+            {error}
+          </div>
+        )}
 
         <div className="flex justify-center gap-4 mb-4">
           <button
@@ -87,6 +94,7 @@ export default function Login() {
             className="border p-2 rounded"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            autoComplete="username"
             required
           />
           <input
@@ -95,11 +103,12 @@ export default function Login() {
             className="border p-2 rounded"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
+            autoComplete="current-password"
             required
           />
           <button 
             type="submit" 
-            className="bg-orange-600 text-white py-2 rounded-lg"
+            className="bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

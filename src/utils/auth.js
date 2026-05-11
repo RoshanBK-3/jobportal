@@ -42,6 +42,8 @@ export const registerUser = async (user) => {
 
 // Authenticate user and start session
 export const loginUser = async (email, password) => {
+  console.log("auth.js: Starting login for:", email);
+  
   try {
     const { data, error } = await supabase
       .from('users')
@@ -49,31 +51,55 @@ export const loginUser = async (email, password) => {
       .eq('email', email)
       .eq('password', password);
     
-    if (error) throw error;
+    console.log("auth.js: Query completed");
+    
+    if (error) {
+      console.error("auth.js: Supabase error:", error);
+      throw error;
+    }
+    
+    console.log("auth.js: Data received:", data);
     
     if (data && data.length > 0) {
       const user = data[0];
       const frontendUser = {
-        ...user,
-        profilePic: user.profile_pic,
-        companyName: user.company_name
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || '',
+        age: user.age || '',
+        gender: user.gender || '',
+        location: user.location || '',
+        contact: user.contact || '',
+        profilePic: user.profile_pic || '',
+        companyName: user.company_name || '',
+        cv: user.cv || ''
       };
       localStorage.setItem(USER_KEY, JSON.stringify(frontendUser));
+      console.log("auth.js: Login successful, user saved to localStorage");
       return frontendUser;
     } else {
+      console.log("auth.js: No user found with these credentials");
       alert("Invalid email or password!");
       return null;
     }
   } catch (error) {
-    console.error("Login error:", error);
-    alert("Login failed!");
+    console.error("auth.js: Login error:", error);
+    alert("Login failed! Check console for details.");
     return null;
   }
 };
 
 // Get currently logged in user from session
 export const getCurrentUser = () => {
-  return JSON.parse(localStorage.getItem(USER_KEY));
+  try {
+    const user = localStorage.getItem(USER_KEY);
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
 };
 
 export const getUser = getCurrentUser;
