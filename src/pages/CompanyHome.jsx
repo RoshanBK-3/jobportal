@@ -16,8 +16,13 @@ export default function CompanyHome() {
     useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [companyJobs, setCompanyJobs] = useState([]);
+  const [allJobs, setAllJobs] = useState([]); // Store jobs in state
 
-  const allJobs = getJobs();
+  // Load all jobs once
+  useEffect(() => {
+    const jobs = getJobs();
+    setAllJobs(jobs);
+  }, []); // Empty array - runs only once
 
   // Function to open PDF from base64 data
   const openPDF = (base64Data) => {
@@ -27,13 +32,11 @@ export default function CompanyHome() {
     }
 
     try {
-      // Check if it's a valid base64 PDF
       if (!base64Data.includes("base64,")) {
         alert("Invalid PDF format");
         return;
       }
 
-      // Convert base64 to blob
       const base64Part = base64Data.split(",")[1];
       if (!base64Part) {
         alert("Invalid PDF data");
@@ -48,11 +51,9 @@ export default function CompanyHome() {
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: "application/pdf" });
 
-      // Create blob URL and open in new tab
       const blobUrl = URL.createObjectURL(blob);
       window.open(blobUrl, "_blank");
 
-      // Clean up the URL after a delay
       setTimeout(() => {
         URL.revokeObjectURL(blobUrl);
       }, 5000);
@@ -62,13 +63,13 @@ export default function CompanyHome() {
     }
   };
 
-  // Load company jobs
+  // Load company jobs - FIXED: depends on allJobs (which is stable) and user
   useEffect(() => {
-    if (user?.role === "company") {
+    if (user?.role === "company" && allJobs.length > 0) {
       const jobs = allJobs.filter((job) => job.createdBy === user?.email);
       setCompanyJobs(jobs);
     }
-  }, [user?.email, user?.role, allJobs]);
+  }, [user?.email, user?.role, allJobs]); // allJobs now has stable reference
 
   // Load all users from database
   useEffect(() => {
@@ -88,10 +89,8 @@ export default function CompanyHome() {
         const savedApplied =
           JSON.parse(localStorage.getItem("appliedJobs")) || [];
 
-        // Ensure it's an array
         let appliedJobs = Array.isArray(savedApplied) ? savedApplied : [];
 
-        // Validate each application has required fields
         const validJobs = appliedJobs.filter(
           (job) => job && job.id && job.appliedBy,
         );
@@ -102,7 +101,7 @@ export default function CompanyHome() {
         setApplications([]);
       }
     }
-  }, [user?.role, companyJobs.length]);
+  }, [user?.role]); // Removed companyJobs.length to prevent loop
 
   // Get applicants for a specific job
   const getApplicantsForJob = useCallback(
@@ -116,8 +115,8 @@ export default function CompanyHome() {
   const getApplicantDetails = useCallback(
     (applicantEmail) => {
       if (!applicantEmail) return null;
-      const user = allUsers.find((u) => u && u.email === applicantEmail);
-      return user || null;
+      const foundUser = allUsers.find((u) => u && u.email === applicantEmail);
+      return foundUser || null;
     },
     [allUsers],
   );
@@ -450,7 +449,6 @@ export default function CompanyHome() {
                 </div>
               </div>
 
-              {/* CV Section */}
               <div className="mb-6">
                 <h3 className="font-semibold text-lg mb-3">Resume / CV</h3>
                 {selectedApplicant.cv ? (

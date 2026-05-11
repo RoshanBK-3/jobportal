@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getUser, logoutUser } from "../utils/auth";
+import { getUser, logoutUser, isLoggedIn } from "../utils/auth";
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [user, setUser] = useState(getUser());
@@ -42,10 +42,21 @@ export default function Navbar({ activeTab, setActiveTab }) {
     navigate("/");
   };
 
+  // 🔥 Handle dashboard click with auth check
+  const handleDashboardClick = (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert("Please login or signup to access dashboard");
+      navigate("/login");
+    } else {
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <nav className="w-full bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        {/* Logo */}
+
         <h1
           className="text-xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition"
           onClick={handleLogoClick}
@@ -53,29 +64,35 @@ export default function Navbar({ activeTab, setActiveTab }) {
           JobPortal
         </h1>
 
-        {/* Links */}
         <div className="hidden md:flex gap-6 text-gray-600">
-          <button
+          <button 
             onClick={handleHomeClick}
             className={`hover:text-orange-600 transition cursor-pointer ${activeTab === "home" ? "text-orange-600 font-semibold" : ""}`}
           >
             Home
           </button>
-          <button
+          <button 
             onClick={handleJobsClick}
             className={`hover:text-orange-600 transition cursor-pointer ${activeTab === "jobs" ? "text-orange-600 font-semibold" : ""}`}
           >
             Jobs
           </button>
-          <Link to="/dashboard" className="hover:text-orange-600 transition">
+          {/* 🔥 Updated Dashboard button with auth check */}
+          <button 
+            onClick={handleDashboardClick}
+            className="hover:text-orange-600 transition cursor-pointer"
+          >
             Dashboard
-          </Link>
+          </button>
         </div>
 
-        {/* Right Side */}
         <div className="flex items-center gap-3">
           {user ? (
             <>
+              <span className="font-medium text-gray-800">
+                {user.role === "company" ? user.companyName : user.name}
+              </span>
+
               {user.role === "company" && (
                 <button
                   onClick={() => navigate("/add-job")}
@@ -84,9 +101,6 @@ export default function Navbar({ activeTab, setActiveTab }) {
                   Post Job
                 </button>
               )}
-              <span className="font-medium text-gray-800">
-                {user.role === "company" ? user.companyName : user.name}
-              </span>
 
               <button
                 onClick={handleLogout}
