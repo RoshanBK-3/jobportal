@@ -18,9 +18,9 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
     console.log("Attempting login with:", form.email);
-    
+
     try {
       const user = await loginUser(form.email, form.password);
       console.log("Login result:", user);
@@ -32,20 +32,24 @@ export default function Login() {
       }
 
       if (user.role !== form.role) {
-        setError(`Selected role (${form.role}) does not match account type (${user.role})`);
+        setError(
+          `Selected role (${form.role}) does not match account type (${user.role})`,
+        );
         setLoading(false);
         return;
       }
 
       // Success - redirect
-      console.log("Redirecting to:", user.role === "company" ? "/company-home" : "/");
-      
+      console.log(
+        "Redirecting to:",
+        user.role === "company" ? "/company-home" : "/",
+      );
+
       if (user.role === "company") {
         window.location.href = "/company-home";
       } else {
         window.location.href = "/";
       }
-      
     } catch (err) {
       console.error("Login error:", err);
       setError("Login failed. Please try again.");
@@ -80,7 +84,9 @@ export default function Login() {
             type="button"
             onClick={() => setForm({ ...form, role: "company" })}
             className={`px-4 py-1 rounded ${
-              form.role === "company" ? "bg-orange-600 text-white" : "bg-gray-200"
+              form.role === "company"
+                ? "bg-orange-600 text-white"
+                : "bg-gray-200"
             }`}
           >
             Company
@@ -106,8 +112,8 @@ export default function Login() {
             autoComplete="current-password"
             required
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
             disabled={loading}
           >
