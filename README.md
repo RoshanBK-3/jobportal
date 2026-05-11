@@ -1,3 +1,36 @@
+# JobPortal
+
+A full-stack job portal application built with React.js and Tailwind CSS.
+
+## 🚀 Live Demo
+[Add Netlify/Vercel link here after deploying]
+
+## 📸 Screenshots
+![Home Page](screenshots/home.png)
+![Dashboard](screenshots/dashboard.png)
+
+## 🛠️ Tech Stack
+- React.js
+- Tailwind CSS
+- React Router
+- LocalStorage (for demo purposes)
+
+## ✨ Features
+- User/Company authentication
+- Post, edit, delete jobs
+- Apply to jobs with profile & CV
+- Bookmark jobs
+- Company dashboard with applicant management
+- Search jobs by skill/location
+
+## 🏃‍♂️ Run Locally
+
+```bash
+git clone https://github.com/YOUR_USERNAME/jobportal.git
+cd jobportal
+npm install
+npm run dev
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
