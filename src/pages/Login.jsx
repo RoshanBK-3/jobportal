@@ -17,11 +17,14 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
-    console.log("Attempting login with:", form.email, form.password); // Debug
+    console.log("=== LOGIN ATTEMPT ===");
+    console.log("Email entered:", form.email);
+    console.log("Password entered:", form.password);
+    console.log("Role selected:", form.role);
     
     const user = await loginUser(form.email, form.password);
-
-    console.log("Login result:", user); // Debug
+    
+    console.log("User returned from loginUser:", user);
 
     if (!user) {
       alert("Invalid email or password");
@@ -29,12 +32,18 @@ export default function Login() {
       return;
     }
 
+    console.log("User role from DB:", user.role);
+    console.log("Selected role:", form.role);
+    console.log("Roles match?", user.role === form.role);
+
     if (user.role !== form.role) {
       alert(`Selected role (${form.role}) does not match account type (${user.role})`);
       setLoading(false);
       return;
     }
 
+    console.log("Navigating to:", user.role === "company" ? "/company-home" : "/");
+    
     if (user.role === "company") {
       navigate("/company-home");
     } else {
