@@ -17,7 +17,11 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
+    console.log("Attempting login with:", form.email, form.password); // Debug
+    
     const user = await loginUser(form.email, form.password);
+
+    console.log("Login result:", user); // Debug
 
     if (!user) {
       alert("Invalid email or password");
@@ -26,7 +30,7 @@ export default function Login() {
     }
 
     if (user.role !== form.role) {
-      alert("Selected role does not match account type");
+      alert(`Selected role (${form.role}) does not match account type (${user.role})`);
       setLoading(false);
       return;
     }
@@ -50,14 +54,18 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setForm({ ...form, role: "user" })}
-            className={`px-4 py-1 rounded ${form.role === "user" ? "bg-orange-600 text-white" : "bg-gray-200"}`}
+            className={`px-4 py-1 rounded ${
+              form.role === "user" ? "bg-orange-600 text-white" : "bg-gray-200"
+            }`}
           >
             User
           </button>
           <button
             type="button"
             onClick={() => setForm({ ...form, role: "company" })}
-            className={`px-4 py-1 rounded ${form.role === "company" ? "bg-orange-600 text-white" : "bg-gray-200"}`}
+            className={`px-4 py-1 rounded ${
+              form.role === "company" ? "bg-orange-600 text-white" : "bg-gray-200"
+            }`}
           >
             Company
           </button>
@@ -68,6 +76,7 @@ export default function Login() {
             type="email"
             placeholder="Email"
             className="border p-2 rounded"
+            value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
@@ -75,10 +84,15 @@ export default function Login() {
             type="password"
             placeholder="Password"
             className="border p-2 rounded"
+            value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
           />
-          <button type="submit" className="bg-orange-600 text-white py-2 rounded-lg" disabled={loading}>
+          <button 
+            type="submit" 
+            className="bg-orange-600 text-white py-2 rounded-lg"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
