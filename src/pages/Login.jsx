@@ -19,7 +19,6 @@ export default function Login() {
     setError("");
 
     try {
-      // Direct Supabase query - bypassing auth.js for testing
       const { data, error: supabaseError } = await supabase
         .from('users')
         .select('*')
@@ -47,16 +46,23 @@ export default function Login() {
         return;
       }
 
-      // Save user to localStorage
+      // ✅ FIX: Save ALL user data including location and contact
       const userToStore = {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone || "",
+        age: user.age || "",
+        gender: user.gender || "",
+        location: user.location || "",      // ← ADD THIS
+        contact: user.contact || "",        // ← ADD THIS
+        companyName: user.company_name || user.name || "",
         profilePic: user.profile_pic || "",
-        companyName: user.company_name || ""
+        cv: user.cv || ""
       };
       
+      console.log("Saving to localStorage:", userToStore);
       localStorage.setItem(USER_KEY, JSON.stringify(userToStore));
       
       // Redirect
@@ -74,64 +80,95 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
       <Navbar />
 
-      <div className="max-w-md mx-auto bg-white p-6 mt-10 rounded-xl shadow">
-        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
-
-        {error && (
-          <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm text-center">
-            {error}
+      <div className="flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+            <p className="text-gray-500">Sign in to continue to JobPortal</p>
           </div>
-        )}
 
-        <div className="flex justify-center gap-4 mb-4">
-          <button
-            type="button"
-            onClick={() => setRole("user")}
-            className={`px-4 py-1 rounded transition ${
-              role === "user" ? "bg-orange-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            User
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("company")}
-            className={`px-4 py-1 rounded transition ${
-              role === "company" ? "bg-orange-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            Company
-          </button>
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            
+            <div className="flex justify-center gap-3 mb-8">
+              <button
+                type="button"
+                onClick={() => setRole("user")}
+                className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
+                  role === "user" 
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                👤 Job Seeker
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("company")}
+                className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
+                  role === "company" 
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md" 
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                🏢 Employer
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center">
+                ⚠️ {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In →"}
+              </button>
+            </form>
+
+            <p className="text-center text-gray-500 text-sm mt-6">
+              Don't have an account?{" "}
+              <button
+                onClick={() => navigate("/signup")}
+                className="text-orange-600 font-semibold hover:text-orange-700 transition"
+              >
+                Create Account
+              </button>
+            </p>
+          </div>
         </div>
-
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button 
-            type="submit" 
-            className="bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
       </div>
     </div>
   );

@@ -49,70 +49,92 @@ export default function Navbar({ activeTab, setActiveTab }) {
   };
 
   return (
-    <nav className="w-full bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <h1
-          className="text-xl font-bold text-orange-600 cursor-pointer hover:text-orange-700 transition"
-          onClick={handleLogoClick}
-        >
-          JobPortal
-        </h1>
-
-        <div className="hidden md:flex gap-6 text-gray-600">
-          <button
-            onClick={handleHomeClick}
-            className={`hover:text-orange-600 transition cursor-pointer ${
-              activeTab === "home" ? "text-orange-600 font-semibold" : ""
-            }`}
+    <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          
+          {/* Logo */}
+          <h1
+            className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition"
+            onClick={handleLogoClick}
           >
-            Home
-          </button>
-          <button
-            onClick={handleJobsClick}
-            className={`hover:text-orange-600 transition cursor-pointer ${
-              activeTab === "jobs" ? "text-orange-600 font-semibold" : ""
-            }`}
-          >
-            Jobs
-          </button>
-          <button onClick={handleDashboardClick} className="hover:text-orange-600 transition cursor-pointer">
-            Dashboard
-          </button>
-        </div>
+            JobPortal
+          </h1>
 
-        <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              {user.role === "company" && (
-                <button
-                  onClick={() => navigate("/add-job")}
-                  className="px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-                >
-                  Post Job
-                </button>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <button
+              onClick={handleHomeClick}
+              className={`relative px-2 py-1 text-gray-600 hover:text-orange-500 transition-all duration-200 ${
+                activeTab === "home" ? "text-orange-500 font-semibold" : ""
+              }`}
+            >
+              Home
+              {activeTab === "home" && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></span>
               )}
-              <span className="font-medium text-gray-800">
-                {user.role === "company" ? user.companyName : user.name}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 border rounded-lg hover:bg-gray-100 transition"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login">
-                <button className="px-4 py-1 border rounded-lg hover:bg-gray-50 transition">Login</button>
-              </Link>
-              <Link to="/signup">
-                <button className="px-4 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition">
-                  Sign Up
+            </button>
+            <button
+              onClick={handleJobsClick}
+              className={`relative px-2 py-1 text-gray-600 hover:text-orange-500 transition-all duration-200 ${
+                activeTab === "jobs" ? "text-orange-500 font-semibold" : ""
+              }`}
+            >
+              Jobs
+              {activeTab === "jobs" && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></span>
+              )}
+            </button>
+            <button
+              onClick={handleDashboardClick}
+              className="relative px-2 py-1 text-gray-600 hover:text-orange-500 transition-all duration-200"
+            >
+              Dashboard
+            </button>
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                {user.role === "company" && (
+                  <button
+                    onClick={() => navigate("/add-job")}
+                    className="hidden sm:flex px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200 text-sm"
+                  >
+                    + Post Job
+                  </button>
+                )}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-purple-400 flex items-center justify-center text-white font-semibold text-sm">
+                    {user.role === "company" ? user.companyName?.charAt(0) || "C" : user.name?.charAt(0) || "U"}
+                  </div>
+                  <span className="hidden sm:block font-medium text-gray-700">
+                    {user.role === "company" ? user.companyName : user.name}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm"
+                >
+                  Logout
                 </button>
-              </Link>
-            </>
-          )}
+              </>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link to="/login">
+                  <button className="px-5 py-2 text-gray-600 hover:text-orange-500 transition-all duration-200 text-sm font-medium">
+                    Login
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <button className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200 text-sm">
+                    Sign Up
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>

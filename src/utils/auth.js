@@ -15,27 +15,38 @@ export const registerUser = async (user) => {
       return false;
     }
     
+    // Prepare user data - ensure all fields are included
+    const userData = {
+      name: user.name || user.companyName,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+      phone: user.phone || null,
+      age: user.age ? parseInt(user.age) : null,
+      gender: user.gender || null,
+      company_name: user.companyName || null,
+      location: user.location || null,
+      contact: user.contact || null,
+      profile_pic: null,
+      cv: null
+    };
+    
+    console.log("Registering user with data:", userData);
+    
     const { error } = await supabase
       .from('users')
-      .insert([{
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        role: user.role,
-        phone: user.phone || null,
-        age: user.age || null,
-        gender: user.gender || null,
-        company_name: user.companyName || null,
-        location: user.location || null,
-        contact: user.contact || null,
-      }]);
+      .insert([userData]);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase insert error:", error);
+      throw error;
+    }
     
+    console.log("User registered successfully!");
     return true;
   } catch (error) {
     console.error("Registration error:", error);
-    alert("Registration failed!");
+    alert("Registration failed: " + error.message);
     return false;
   }
 };
@@ -62,6 +73,9 @@ export const loginUser = async (email, password) => {
     
     if (data && data.length > 0) {
       const user = data[0];
+      console.log("Raw user from DB:", user);
+      
+      // Make sure ALL fields are included
       const frontendUser = {
         id: user.id,
         name: user.name,
@@ -70,12 +84,15 @@ export const loginUser = async (email, password) => {
         phone: user.phone || '',
         age: user.age || '',
         gender: user.gender || '',
-        location: user.location || '',
-        contact: user.contact || '',
+        location: user.location || '',      // ← CRITICAL: Include this
+        contact: user.contact || '',        // ← CRITICAL: Include this
+        companyName: user.company_name || user.name || '',
         profilePic: user.profile_pic || '',
-        companyName: user.company_name || '',
         cv: user.cv || ''
       };
+      
+      console.log("Frontend user being saved to localStorage:", frontendUser);
+      
       localStorage.setItem(USER_KEY, JSON.stringify(frontendUser));
       console.log("auth.js: Login successful, user saved to localStorage");
       return frontendUser;
@@ -107,12 +124,14 @@ export const getUser = getCurrentUser;
 // Update user profile data
 export const updateCurrentUser = async (updatedUser) => {
   try {
+    console.log("Updating user:", updatedUser);
+    
     const { error } = await supabase
       .from('users')
       .update({
         name: updatedUser.name,
         phone: updatedUser.phone,
-        age: updatedUser.age,
+        age: updatedUser.age ? parseInt(updatedUser.age) : null,
         gender: updatedUser.gender,
         profile_pic: updatedUser.profilePic,
         cv: updatedUser.cv,

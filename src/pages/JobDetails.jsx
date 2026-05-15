@@ -12,18 +12,15 @@ export default function JobDetails() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isApplying, setIsApplying] = useState(false);
   const [job, setJob] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   // Load job data
   useEffect(() => {
     const loadJob = async () => {
       try {
-        setLoading(true);
         const jobs = await getJobs();
         
         if (!jobs || !Array.isArray(jobs)) {
           setJob(null);
-          setLoading(false);
           return;
         }
         
@@ -32,8 +29,6 @@ export default function JobDetails() {
       } catch (error) {
         console.error("Error loading job:", error);
         setJob(null);
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -95,7 +90,6 @@ export default function JobDetails() {
     setIsApplying(true);
 
     try {
-      // Check if already applied
       const { data: existing } = await supabase
         .from('applications')
         .select('id')
@@ -108,7 +102,6 @@ export default function JobDetails() {
         return;
       }
       
-      // Save to Supabase
       const { error } = await supabase
         .from('applications')
         .insert([{
@@ -132,69 +125,86 @@ export default function JobDetails() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <Navbar />
-        <div className="text-center py-20">Loading job details...</div>
-      </div>
-    );
-  }
-
   if (!job) {
     return (
-      <div className="bg-gray-50 min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
         <Navbar />
-        <div className="text-center py-20">
-          <p className="text-gray-500 text-lg">Job not found</p>
-          <button 
-            onClick={() => navigate("/")}
-            className="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
-          >
-            Back to Home
-          </button>
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="text-red-500 text-lg mb-4">Job not found</p>
+            <button 
+              onClick={() => navigate("/")}
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto p-6 bg-white mt-10 rounded-xl shadow">
-        <h1 className="text-2xl font-bold mb-2">{job.title}</h1>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-orange-500 to-purple-600 px-6 py-5">
+            <h1 className="text-2xl font-bold text-white">{job.title}</h1>
+            <p className="text-orange-100 mt-1">
+              {job.company} • 📍 {job.location}
+            </p>
+          </div>
 
-        <p className="text-gray-500 mb-4">
-          {job.company} • {job.location}
-        </p>
+          {/* Content */}
+          <div className="p-6">
+            {/* Skills */}
+            <div className="mb-5">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <span>⚡</span> Required Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {job.skills && job.skills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-purple-50 text-orange-600 rounded-full text-sm font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {job.skills && job.skills.map((skill, index) => (
-            <span
-              key={index}
-              className="bg-purple-100 text-purple-600 px-2 py-1 rounded text-xs"
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <span>📋</span> Job Description
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                {job.description}
+              </p>
+            </div>
+
+            {/* Apply Button */}
+            <button
+              onClick={handleApply}
+              disabled={hasAppliedToJob || isApplying}
+              className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+                hasAppliedToJob
+                  ? "bg-green-500 text-white cursor-not-allowed"
+                  : isApplying
+                  ? "bg-gray-400 text-white cursor-wait"
+                  : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-md shadow-orange-200"
+              }`}
             >
-              {skill}
-            </span>
-          ))}
+              {hasAppliedToJob ? "✅ Applied Successfully" : isApplying ? "Applying..." : "Apply Now →"}
+            </button>
+          </div>
         </div>
-
-        <p className="text-gray-700 mb-6">{job.description}</p>
-
-        <button
-          onClick={handleApply}
-          disabled={hasAppliedToJob || isApplying}
-          className={`px-6 py-2 rounded-lg transition ${
-            hasAppliedToJob
-              ? "bg-green-500 text-white cursor-not-allowed"
-              : isApplying
-              ? "bg-gray-400 text-white cursor-wait"
-              : "bg-purple-600 text-white hover:bg-purple-700"
-          }`}
-        >
-          {hasAppliedToJob ? "✅ Applied" : isApplying ? "Applying..." : "Apply Now"}
-        </button>
       </div>
     </div>
   );

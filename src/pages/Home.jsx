@@ -10,7 +10,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
   const [allJobs, setAllJobs] = useState([]);
   const [sortedJobs, setSortedJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [totalApplicants, setTotalApplicants] = useState(0);
@@ -22,7 +21,6 @@ export default function Home() {
   // Load all jobs and calculate stats
   useEffect(() => {
     const loadJobs = async () => {
-      setLoading(true);
       const jobs = await getJobs();
       setAllJobs(jobs);
       setTotalJobs(jobs.length);
@@ -47,7 +45,6 @@ export default function Home() {
         if (application.appliedBy) uniqueApplicants.add(application.appliedBy);
       });
       setTotalApplicants(uniqueApplicants.size);
-      setLoading(false);
     };
 
     loadJobs();
@@ -85,55 +82,92 @@ export default function Home() {
 
   const featuredJobs = sortedJobs.slice(0, 3);
 
-  if (loading) {
-    return (
-      <div className="bg-gray-50 min-h-screen flex flex-col">
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="text-center py-20">Loading jobs...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50 flex flex-col">
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <div className="max-w-6xl mx-auto p-6 flex-grow">
-        {/* Search Bar */}
-        <div className="bg-white p-4 rounded-xl shadow mb-8 flex gap-4 flex-wrap">
-          <input
-            type="text"
-            placeholder="Search by skill"
-            className="border p-2 rounded w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={searchSkill}
-            onChange={(e) => setSearchSkill(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Search by location"
-            className="border p-2 rounded w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={searchLocation}
-            onChange={(e) => setSearchLocation(e.target.value)}
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-orange-600 text-white px-5 py-2 rounded-lg hover:bg-orange-700 transition"
-          >
-            Search
-          </button>
-          {isSearched && (
-            <button onClick={handleClear} className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
-              Clear
-            </button>
-          )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+        
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            Find Your Dream Internship/Job 🚀
+          </h1>
+          <p className="text-lg text-gray-600">
+            Discover thousands of jobs in Kathmandu and beyond
+          </p>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">{totalJobs}+</div>
+            <div className="text-gray-500">Active Jobs</div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">{totalCompanies}+</div>
+            <div className="text-gray-500">Trusted Companies</div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">{totalApplicants}+</div>
+            <div className="text-gray-500">Happy Applicants</div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search by Skill</label>
+              <input
+                type="text"
+                placeholder="e.g., React, Node.js, Python"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                value={searchSkill}
+                onChange={(e) => setSearchSkill(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <input
+                type="text"
+                placeholder="e.g., Kathmandu, Pokhara"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end gap-3">
+              <button
+                onClick={handleSearch}
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
+              >
+                🔍 Search Jobs
+              </button>
+              {isSearched && (
+                <button
+                  onClick={handleClear}
+                  className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content based on tab/search state */}
         {isSearched ? (
           <>
-            <h2 className="text-xl font-semibold mb-4">Search Results</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Search Results</h2>
+              <p className="text-gray-500">{filteredJobs.length} jobs found</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.length === 0 ? (
-                <p className="text-center col-span-3 py-10">No jobs found</p>
+                <div className="col-span-3 text-center py-12">
+                  <p className="text-gray-500 text-lg">No jobs found. Try different keywords!</p>
+                </div>
               ) : (
                 filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
               )}
@@ -141,11 +175,13 @@ export default function Home() {
           </>
         ) : activeTab === "jobs" ? (
           <>
-            <h2 className="text-xl font-semibold mb-4">All Jobs</h2>
-            <p className="text-gray-500 text-sm mb-4">Recently posted jobs appear first</p>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">All Jobs</h2>
+              <p className="text-gray-500">Recently posted first</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedJobs.length === 0 ? (
-                <p>No jobs found</p>
+                <p className="text-center col-span-3 py-12 text-gray-500">No jobs found</p>
               ) : (
                 sortedJobs.map((job) => <JobCard key={job.id} job={job} />)
               )}
@@ -153,83 +189,85 @@ export default function Home() {
           </>
         ) : (
           <>
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold">Find Your Dream Internship 🚀</h1>
-              <p className="text-gray-600">Discover jobs in Kathmandu and beyond</p>
+            {/* Featured Jobs */}
+            <div className="mb-12">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">✨ Featured Opportunities</h2>
+                <button 
+                  onClick={() => setActiveTab("jobs")}
+                  className="text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  View all →
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredJobs.length === 0 ? (
+                  <p className="text-center col-span-3 text-gray-500">No featured jobs</p>
+                ) : (
+                  featuredJobs.map((job) => <JobCard key={job.id} job={job} />)
+                )}
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-10 text-center">
-              <div className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
-                <p className="text-2xl font-bold text-orange-600">{totalJobs}+</p>
-                <p className="text-gray-500 text-sm">Jobs</p>
+            {/* Recent Jobs */}
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">📋 Recently Posted</h2>
+                <button 
+                  onClick={() => setActiveTab("jobs")}
+                  className="text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  Browse all →
+                </button>
               </div>
-              <div className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
-                <p className="text-2xl font-bold text-orange-600">{totalCompanies}+</p>
-                <p className="text-gray-500 text-sm">Companies</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedJobs.slice(0, 6).map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
               </div>
-              <div className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
-                <p className="text-2xl font-bold text-orange-600">{totalApplicants}+</p>
-                <p className="text-gray-500 text-sm">Applicants</p>
-              </div>
-            </div>
-
-            <h2 className="text-xl font-semibold mb-4">Featured Jobs</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
-              {featuredJobs.length === 0 ? (
-                <p>No jobs found</p>
-              ) : (
-                featuredJobs.map((job) => <JobCard key={job.id} job={job} />)
-              )}
-            </div>
-
-            <h2 className="text-xl font-semibold mb-4">All Jobs</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {sortedJobs.length === 0 ? (
-                <p>No jobs found</p>
-              ) : (
-                sortedJobs.map((job) => <JobCard key={job.id} job={job} />)
-              )}
             </div>
           </>
         )}
       </div>
 
-      <footer className="bg-gray-900 text-gray-300 mt-16">
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-4 gap-8 text-sm">
+      {/*Footer */}
+      <footer className="bg-slate-900 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h1 className="text-xl font-bold text-white mb-2">JobPortal</h1>
-              <p className="text-gray-400">Find the right job and make your career grow faster.</p>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                JobPortal
+              </h1>
+              <p className="text-gray-400 text-sm">Find the right job and make your career grow faster.</p>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Explore</h3>
-              <ul className="space-y-2">
-                <li onClick={() => setActiveTab("home")} className="hover:text-white cursor-pointer">Home</li>
-                <li onClick={() => setActiveTab("jobs")} className="hover:text-white cursor-pointer">Jobs</li>
-                <li className="hover:text-white cursor-pointer">Companies</li>
-                <li className="hover:text-white cursor-pointer">Dashboard</li>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Jobs</a></li>
+                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Companies</a></li>
+                <li><a href="/dashboard" className="text-gray-400 hover:text-orange-400 transition">Dashboard</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Legal</h3>
-              <ul className="space-y-2">
-                <li className="hover:text-white cursor-pointer">Terms</li>
-                <li className="hover:text-white cursor-pointer">Privacy</li>
-                <li className="hover:text-white cursor-pointer">Cookies</li>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Terms</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Privacy</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Cookies</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Contact</h3>
-              <p className="text-gray-400">support@jobportal.com</p>
-              <div className="flex gap-3 mt-3 text-lg">
-                <span className="hover:text-white cursor-pointer">🌐</span>
-                <span className="hover:text-white cursor-pointer">🐦</span>
-                <span className="hover:text-white cursor-pointer">💼</span>
-                <span className="hover:text-white cursor-pointer">📸</span>
+              <p className="text-gray-400 text-sm">support@jobportal.com</p>
+              <div className="flex gap-3 mt-3">
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🌐</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🐦</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">💼</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">📸</span>
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-700 mt-10 pt-6 text-center text-xs text-gray-500">
+          <div className="border-t border-gray-800 mt-8 pt-6 text-center text-xs text-gray-500">
             © 2026 Job Portal. All rights reserved.
           </div>
         </div>
