@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 import { getJobs } from "../data/jobs";
 import { getCurrentUser } from "../utils/auth";
@@ -85,16 +86,29 @@ export default function CompanyHome() {
     }
   }, [user?.email]);
 
+  // Load applications - ONLY for jobs posted by this company
   useEffect(() => {
-    if (user?.role === "company") {
+    if (user?.role === "company" && companyJobs.length > 0) {
       const loadApplications = async () => {
         try {
+          // Get all job IDs for this company
+          const companyJobIds = companyJobs.map(job => job.id);
+          
+          if (companyJobIds.length === 0) {
+            setApplications([]);
+            return;
+          }
+
+          // Fetch only applications for jobs belonging to this company
           const { data, error } = await supabase
             .from("applications")
-            .select("*");
+            .select("*")
+            .in("job_id", companyJobIds);
 
           if (!error && data) {
             setApplications(data);
+          } else {
+            setApplications([]);
           }
         } catch (error) {
           console.error("Error loading applications:", error);
@@ -103,8 +117,10 @@ export default function CompanyHome() {
       };
 
       loadApplications();
+    } else if (companyJobs.length === 0) {
+      setApplications([]);
     }
-  }, [user?.role]);
+  }, [user?.role, companyJobs]);
 
   const getApplicantsForJob = useCallback(
     (jobId) => applications.filter((app) => app.job_id === jobId),
@@ -146,10 +162,13 @@ export default function CompanyHome() {
     setActiveTab(tab);
   };
 
-  // Stats data
+  // Calculate total applicants for this company (unique applicants across all their jobs)
+  const totalCompanyApplicants = applications.length;
+
+  // Stats data - now using company-specific applicant count
   const stats = [
     { icon: "📊", value: companyJobs.length, label: "Jobs Posted" },
-    { icon: "👥", value: applications.length, label: "Total Applicants" },
+    { icon: "👥", value: totalCompanyApplicants, label: "Total Applicants" },
     { icon: "⭐", value: companyJobs.filter(job => job.status !== "closed").length, label: "Active Jobs" }
   ];
 
@@ -191,16 +210,18 @@ export default function CompanyHome() {
               </p>
             </div>
 
-            {/* Hero Section*/}
-            <div className="bg-gradient-to-r from-orange-500 to-purple-600 rounded-xl p-5 mb-6 text-white">
-              <div className="flex justify-between items-center flex-wrap gap-3">
-                <div>
-                  <h2 className="text-lg md:text-xl font-bold mb-1">Find the Best Talent for Your Company</h2>
-                  <p className="text-orange-100 text-xs">Post jobs, review applications, and connect with qualified candidates.</p>
+            {/* Hero Section */}
+            <div className="bg-gradient-to-r from-orange-500 to-purple-600 rounded-xl p-8 mb-6 text-white">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1">
+                  <h2 className="text-xl md:text-2xl font-bold mb-2">Find the Best Talent for Your Company</h2>
+                  <p className="text-orange-100 text-sm md:text-base">
+                    Post jobs, review applications, and connect with qualified candidates who match your requirements.
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate("/add-job")}
-                  className="bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition text-sm whitespace-nowrap"
+                  className="bg-white text-orange-600 px-6 py-2.5 rounded-lg font-semibold hover:shadow-lg transition text-sm md:text-base whitespace-nowrap"
                 >
                   + Post a New Job
                 </button>
@@ -247,7 +268,7 @@ export default function CompanyHome() {
               </div>
             </div>
 
-            {/* Your Recent Jobs */}
+            {/* Recent Jobs */}
             {companyJobs.length > 0 && (
               <>
                 <h2 className="text-lg font-bold text-gray-800 mb-3">Your Recent Jobs</h2>
@@ -279,7 +300,7 @@ export default function CompanyHome() {
           </>
         )}
 
-        {/* ========== DASHBOARD TAB ========== */}
+        {/*DASHBOARD TAB */}
         {activeTab === "dashboard" && (
           <>
             <div className="mb-6">
@@ -341,7 +362,7 @@ export default function CompanyHome() {
           </>
         )}
 
-        {/*JOBS TAB - ONLY JOBS*/}
+        {/*JOBS TAB*/}
         {activeTab === "jobs" && (
           <>
             <div className="flex justify-between items-center mb-5">
@@ -360,47 +381,7 @@ export default function CompanyHome() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                JobPortal
-              </h1>
-              <p className="text-gray-400 text-xs">Find the right job and make your career grow faster.</p>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-sm">Explore</h3>
-              <ul className="space-y-1 text-xs">
-                <li><button onClick={() => handleTabChange("jobs")} className="text-gray-400 hover:text-orange-400 transition">Jobs</button></li>
-                <li><button onClick={() => handleTabChange("home")} className="text-gray-400 hover:text-orange-400 transition">Home</button></li>
-                <li><button onClick={() => handleTabChange("dashboard")} className="text-gray-400 hover:text-orange-400 transition">Dashboard</button></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-sm">Legal</h3>
-              <ul className="space-y-1 text-xs">
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Terms</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Privacy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Cookies</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-sm">Contact</h3>
-              <p className="text-gray-400 text-xs">support@jobportal.com</p>
-              <div className="flex gap-2 mt-2">
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">🌐</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">🐦</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">💼</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">📸</span>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-5 pt-4 text-center text-[10px] text-gray-500">
-            © 2026 Job Portal. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer onTabChange={setActiveTab} />
 
       {/* Applicants Modal */}
       <Modal isOpen={showApplicantsModal} onClose={() => setShowApplicantsModal(false)} title={`Applicants for ${selectedJob?.title}`}>

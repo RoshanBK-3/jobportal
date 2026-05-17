@@ -88,7 +88,7 @@ export default function Login() {
           
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-            <p className="text-gray-500">Sign in to continue to JobPortal</p>
+            <p className="text-gray-500">Log in to continue to JobPortal</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -154,7 +154,7 @@ export default function Login() {
                 className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition"
                 disabled={loading}
               >
-                {loading ? "Signing in..." : "Sign In →"}
+                {loading ? "Logging in..." : "Log In →"}
               </button>
             </form>
 

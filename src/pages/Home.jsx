@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import { getJobs } from "../data/jobs";
 import { JobCard } from "../components/JobCard";
 import { getCurrentUser } from "../utils/auth";
 import CompanyHome from "./CompanyHome";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+  const navigate = useNavigate();
   const user = getCurrentUser();
   const [activeTab, setActiveTab] = useState("home");
   const [allJobs, setAllJobs] = useState([]);
@@ -88,18 +91,40 @@ export default function Home() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-        
-        {/*HOME TAB */}
+        {/* HOME TAB */}
         {activeTab === "home" && (
           <>
-            {/* Hero Section */}
+            {/* Hero Section - Shows different content for logged in vs non-logged in */}
             <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-                Find Your Dream Internship/Job 🚀
+                {user
+                  ? "Find Your Dream Internship/Job 🚀"
+                  : "Find Jobs or Hire Talent 🚀"}
               </h1>
-              <p className="text-lg text-gray-600">
-                Discover thousands of jobs in Kathmandu and beyond
+              <p className="text-lg text-gray-600 mb-3">
+                {user
+                  ? "Discover thousands of jobs in Kathmandu and beyond"
+                  : "Whether you're looking for your next career opportunity or searching for the perfect candidate"}
               </p>
+              {/* For non-logged in users - show dual purpose message */}
+              {!user && (
+                <div className="flex flex-col items-center justify-center gap-5 mt-6">
+                  <div className="flex items-center gap-3 text-base md:text-lg text-gray-600">
+                    <span className="text-orange-500 text-2xl">🎯</span>
+                    <span className="font-semibold">Find Jobs</span>
+                    <span className="text-gray-400 text-xl">•</span>
+                    <span className="text-purple-500 text-2xl">🏢</span>
+                    <span className="font-semibold">Post Jobs</span>
+
+                    <button
+                      onClick={() => navigate("/signup")}
+                      className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
+                    >
+                      Get Started
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Search Bar */}
@@ -147,7 +172,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
               <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -177,7 +202,9 @@ export default function Home() {
                   <h2 className="text-2xl font-bold text-gray-800">
                     Search Results
                   </h2>
-                  <p className="text-gray-500">{filteredJobs.length} jobs found</p>
+                  <p className="text-gray-500">
+                    {filteredJobs.length} jobs found
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredJobs.length === 0 ? (
@@ -187,7 +214,9 @@ export default function Home() {
                       </p>
                     </div>
                   ) : (
-                    filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
+                    filteredJobs.map((job) => (
+                      <JobCard key={job.id} job={job} />
+                    ))
                   )}
                 </div>
               </>
@@ -212,7 +241,9 @@ export default function Home() {
                         No featured jobs
                       </p>
                     ) : (
-                      featuredJobs.map((job) => <JobCard key={job.id} job={job} />)
+                      featuredJobs.map((job) => (
+                        <JobCard key={job.id} job={job} />
+                      ))
                     )}
                   </div>
                 </div>
@@ -262,99 +293,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-3">
-                JobPortal
-              </h1>
-              <p className="text-gray-400 text-sm">
-                Find the right job and make your career grow faster.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-3">Explore</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <button
-                    onClick={() => setActiveTab("jobs")}
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Jobs
-                  </button>
-                </li>
-                <li>
-                  <a
-                    href="/"
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Companies
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/dashboard"
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Dashboard
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-3">Legal</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-orange-400 transition"
-                  >
-                    Cookies
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-3">Contact</h3>
-              <p className="text-gray-400 text-sm">support@jobportal.com</p>
-              <div className="flex gap-3 mt-3">
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
-                  🌐
-                </span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
-                  🐦
-                </span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
-                  💼
-                </span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
-                  📸
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-6 text-center text-xs text-gray-500">
-            © 2026 Job Portal. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer onTabChange={setActiveTab} />
     </div>
   );
 }
