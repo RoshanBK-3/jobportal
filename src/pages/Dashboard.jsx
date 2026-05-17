@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [allJobs, setAllJobs] = useState([]);
   const [activeSection, setActiveSection] = useState("profile");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Load all jobs first
   useEffect(() => {
@@ -37,18 +38,14 @@ export default function Dashboard() {
 
         if (!bookmarkError && bookmarkData) {
           const bookmarkedJobs = bookmarkData
-            .map((bookmark) =>
-              allJobs.find((job) => job.id === bookmark.job_id),
-            )
+            .map((bookmark) => allJobs.find((job) => job.id === bookmark.job_id))
             .filter((job) => job);
           setBookmarks(bookmarkedJobs);
         }
       }
 
       if (user?.role === "company") {
-        const companyJobs = allJobs.filter(
-          (job) => job.createdBy === user.email,
-        );
+        const companyJobs = allJobs.filter((job) => job.createdBy === user.email);
         setMyJobs(companyJobs);
       }
 
@@ -101,9 +98,7 @@ export default function Dashboard() {
   };
 
   const handleRemoveImage = () => {
-    if (
-      window.confirm("Are you sure you want to remove your profile picture?")
-    ) {
+    if (window.confirm("Are you sure you want to remove your profile picture?")) {
       const updated = { ...user, profilePic: "" };
       updateCurrentUser(updated);
       setUser(updated);
@@ -167,7 +162,6 @@ export default function Dashboard() {
     return value;
   };
 
-  // Get display name
   const displayName = () => {
     if (user?.role === "company") {
       return user.companyName || user.name || "Company";
@@ -175,159 +169,133 @@ export default function Dashboard() {
     return user?.name || "User";
   };
 
+  // Mobile section selector
+  const SectionButton = ({ section, label, icon, count }) => (
+    <button
+      onClick={() => setActiveSection(section)}
+      className={`flex-1 py-3 px-2 rounded-xl font-medium transition-all duration-200 text-sm ${
+        activeSection === section
+          ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md"
+          : "bg-white text-gray-600 border border-gray-200"
+      }`}
+    >
+      {icon} {label} {count !== undefined && `(${count})`}
+    </button>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Header Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-          {/* Cover Banner */}
-          <div className="h-28 bg-gradient-to-r from-orange-400 to-purple-500"></div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        
+        {/* Profile Header Card - Mobile Optimized */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 sm:mb-8">
+          {/* Cover Banner - Smaller on mobile */}
+          <div className="h-20 sm:h-28 bg-gradient-to-r from-orange-400 to-purple-500"></div>
 
-          <div className="px-6 pb-6">
-            {/* Profile Image and Basic Info - Side by side */}
-            <div className="flex flex-col md:flex-row gap-6 -mt-14 mb-6">
-              {/* Profile Image */}
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            {/* Profile Image and Basic Info */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 -mt-10 sm:-mt-14 mb-4 sm:mb-6">
+              {/* Profile Image - Smaller on mobile */}
               <div className="flex flex-col items-center">
                 <div className="relative">
                   {uploading ? (
-                    <div className="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-gray-200 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-orange-500"></div>
                     </div>
                   ) : user?.profilePic ? (
                     <img
                       src={user.profilePic}
                       alt="profile"
-                      className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg"
+                      className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-lg"
                     />
                   ) : (
-                    <div className="w-28 h-28 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                      <span className="text-4xl text-gray-500">👤</span>
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                      <span className="text-3xl sm:text-4xl text-gray-500">👤</span>
                     </div>
                   )}
-                  <label className="absolute bottom-0 right-0 bg-orange-500 rounded-full p-1.5 cursor-pointer hover:bg-orange-600 transition shadow-md">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
+                  <label className="absolute bottom-0 right-0 bg-orange-500 rounded-full p-1 cursor-pointer hover:bg-orange-600 transition shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploading}
-                    />
+                    <input type="file" hidden accept="image/*" onChange={handleImageUpload} disabled={uploading} />
                   </label>
                 </div>
                 {user?.profilePic && (
-                  <button
-                    onClick={handleRemoveImage}
-                    className="text-xs text-red-500 mt-2 hover:text-red-700 transition"
-                  >
-                    Remove Photo
+                  <button onClick={handleRemoveImage} className="text-xs text-red-500 mt-1 hover:text-red-700 transition">
+                    Remove
                   </button>
                 )}
               </div>
 
-              {/* User Info - Name and Role only (NO EMAIL HERE) */}
-              <div className="flex-1 mt-2">
-                <h1 className="text-2xl font-bold text-gray-800">
+              {/* User Info */}
+              <div className="flex-1 text-center sm:text-left mt-2 sm:mt-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
                   {displayName()}
                 </h1>
                 <div className="mt-1">
-                  <span className="px-3 py-1 bg-gradient-to-r from-orange-100 to-purple-100 text-orange-600 rounded-full text-xs font-medium">
-                    {user?.role === "company"
-                      ? "Employer Account"
-                      : "Job Seeker"}
+                  <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-orange-100 to-purple-100 text-orange-600 rounded-full text-xs font-medium">
+                    {user?.role === "company" ? "Employer Account" : "Job Seeker"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Warning Banner */}
+            {/* Warning Banner - Mobile Optimized */}
             {user?.role === "user" && (!user?.profilePic || !user?.cv) && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚠️</span>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-xl sm:text-2xl">⚠️</span>
                   <div>
-                    <p className="text-sm font-semibold text-yellow-800">
+                    <p className="text-xs sm:text-sm font-semibold text-yellow-800">
                       Complete your profile to apply for jobs:
                     </p>
-                    <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
+                    <ul className="text-xs sm:text-sm text-yellow-700 mt-1 list-disc list-inside">
                       {!user?.profilePic && <li>Upload a profile picture</li>}
-                      {!user?.cv && (
-                        <li>Upload your CV/Resume (PDF format, max 1MB)</li>
-                      )}
+                      {!user?.cv && <li>Upload your CV/Resume (PDF format, max 1MB)</li>}
                     </ul>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Contact Information Section - Email and other details together */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            {/* Contact Information Section - Mobile Optimized */}
+            <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <span>📧</span> Contact Information
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 w-24">Email Address:</span>
-                  <span className="text-gray-700">
-                    {user?.email || "Not provided"}
-                  </span>
+              <div className="grid grid-cols-1 gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                  <span className="text-gray-500 w-full sm:w-24">Email:</span>
+                  <span className="text-gray-700 break-all">{user?.email || "Not provided"}</span>
                 </div>
                 {user?.role === "user" && (
                   <>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-24">Contact:</span>
-                      <span className="text-gray-700">
-                        {displayValue(user?.phone)}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-500 w-full sm:w-24">Phone:</span>
+                      <span className="text-gray-700">{displayValue(user?.phone)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-24">Age:</span>
-                      <span className="text-gray-700">
-                        {displayValue(user?.age)}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-500 w-full sm:w-24">Age:</span>
+                      <span className="text-gray-700">{displayValue(user?.age)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-24">Gender:</span>
-                      <span className="text-gray-700">
-                        {displayValue(user?.gender)}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-500 w-full sm:w-24">Gender:</span>
+                      <span className="text-gray-700">{displayValue(user?.gender)}</span>
                     </div>
                   </>
                 )}
                 {user?.role === "company" && (
                   <>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-24">Location:</span>
-                      <span className="text-gray-700">
-                        {displayValue(user?.location)}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-500 w-full sm:w-24">Location:</span>
+                      <span className="text-gray-700">{displayValue(user?.location)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500 w-24">Contact:</span>
-                      <span className="text-gray-700">
-                        {displayValue(user?.contact)}
-                      </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-gray-500 w-full sm:w-24">Contact:</span>
+                      <span className="text-gray-700">{displayValue(user?.contact)}</span>
                     </div>
                   </>
                 )}
@@ -336,204 +304,178 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* CV Section */}
+        {/* CV Section - Mobile Optimized */}
         {user?.role === "user" && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
-                <span className="text-xl">📄</span>
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-lg sm:text-xl">📄</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Resume / CV
-              </h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800">Resume / CV</h3>
             </div>
 
             {!user?.cv && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl text-sm text-orange-700">
-                CV is required to apply for jobs. Please upload your resume (PDF
-                only, max 1MB).
+              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl text-xs sm:text-sm text-orange-700">
+                CV is required to apply for jobs. Please upload your resume (PDF only, max 1MB).
               </div>
             )}
             {user?.cv && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center gap-2">
-                <span>✅</span> CV uploaded successfully! You can now apply for
-                jobs.
+              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-green-50 border border-green-200 rounded-xl text-xs sm:text-sm text-green-700 flex items-center gap-2">
+                <span>✅</span> CV uploaded successfully!
               </div>
             )}
 
-            <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium cursor-pointer hover:from-orange-600 hover:to-orange-700 transition shadow-md shadow-orange-200">
-              <span>{user?.cv ? "🔄 " : "📎"}</span>
+            <label className="inline-flex items-center gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium cursor-pointer hover:from-orange-600 hover:to-orange-700 transition shadow-md text-sm">
+              <span>{user?.cv ? "🔄" : "📎"}</span>
               {user?.cv ? "Update CV" : "Upload CV"}
-              <input
-                type="file"
-                hidden
-                accept="application/pdf"
-                onChange={handleCVUpload}
-                disabled={uploading}
-              />
+              <input type="file" hidden accept="application/pdf" onChange={handleCVUpload} disabled={uploading} />
             </label>
 
             {user?.cv && (
-              <div className="mt-4">
-                <button
-                  onClick={() => setShowPdfModal(true)}
-                  className="w-full flex items-center gap-4 border-2 border-purple-200 rounded-xl p-4 bg-gradient-to-r from-purple-50 to-orange-50 hover:from-purple-100 hover:to-orange-100 transition"
-                >
-                  <div className="text-4xl">📄</div>
+              <div className="mt-3 sm:mt-4">
+                <button onClick={() => setShowPdfModal(true)} className="w-full flex items-center gap-3 sm:gap-4 border-2 border-purple-200 rounded-xl p-3 sm:p-4 bg-gradient-to-r from-purple-50 to-orange-50 hover:from-purple-100 hover:to-orange-100 transition text-sm sm:text-base">
+                  <div className="text-2xl sm:text-4xl">📄</div>
                   <div className="text-left">
                     <p className="font-medium text-gray-800">Uploaded Resume</p>
-                    <p className="text-sm text-gray-500">
-                      Click to view full PDF
-                    </p>
+                    <p className="text-xs text-gray-500">Click to view full PDF</p>
                   </div>
                   <span className="ml-auto text-purple-500">→</span>
                 </button>
-
-                <div className="flex gap-4 mt-3">
-                  <button
-                    onClick={handleRemoveCV}
-                    className="text-sm text-red-500 hover:text-red-700 transition"
-                  >
-                    🗑️ Remove CV
-                  </button>
-                </div>
+                <button onClick={handleRemoveCV} className="text-xs sm:text-sm text-red-500 hover:text-red-700 transition mt-2">
+                  🗑️ Remove CV
+                </button>
               </div>
             )}
           </div>
         )}
 
-        {/* Section Tabs for User Role */}
+        {/* Mobile Section Tabs */}
         {user?.role === "user" && (
-          <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
-            <button
-              onClick={() => setActiveSection("bookmarks")}
-              className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
-                activeSection === "bookmarks"
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-200"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              🔖 Bookmarks ({bookmarks.length})
-            </button>
-            <button
-              onClick={() => setActiveSection("applied")}
-              className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-200 whitespace-nowrap ${
-                activeSection === "applied"
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-200"
-                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-              }`}
-            >
-              📋 Applied Jobs ({appliedJobs.length})
-            </button>
+          <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6 overflow-x-auto pb-2">
+            <SectionButton section="profile" label="Profile" icon="👤" />
+            <SectionButton section="bookmarks" label="Bookmarks" icon="🔖" count={bookmarks.length} />
+            <SectionButton section="applied" label="Applied" icon="📋" count={appliedJobs.length} />
           </div>
         )}
 
-        {/* Bookmarked Jobs Section */}
-        {user?.role === "user" && activeSection === "bookmarks" && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center gap-3 mb-6">
+        {/* Profile Section (for mobile users) */}
+        {user?.role === "user" && activeSection === "profile" && (
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
-                <span className="text-xl">🔖</span>
+                <span className="text-xl">👤</span>
               </div>
-              <h2 className="text-xl font-bold text-gray-800">
-                Bookmarked Jobs
-              </h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">Profile Information</h2>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 w-full sm:w-28">Full Name:</span>
+                <span className="text-gray-700 font-medium">{displayName()}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 w-full sm:w-28">Email:</span>
+                <span className="text-gray-700 break-all">{user?.email}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 w-full sm:w-28">Phone:</span>
+                <span className="text-gray-700">{displayValue(user?.phone)}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 w-full sm:w-28">Age:</span>
+                <span className="text-gray-700">{displayValue(user?.age)}</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-gray-500 w-full sm:w-28">Gender:</span>
+                <span className="text-gray-700">{displayValue(user?.gender)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bookmarked Jobs Section - Mobile Optimized */}
+        {user?.role === "user" && activeSection === "bookmarks" && (
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-lg sm:text-xl">🔖</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">Bookmarked Jobs</h2>
             </div>
 
             {bookmarks.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-3">📭</div>
-                <p className="text-gray-500">No bookmarked jobs yet</p>
-                <button
-                  onClick={() => (window.location.href = "/")}
-                  className="mt-4 px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition"
-                >
+              <div className="text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-5xl mb-3">📭</div>
+                <p className="text-gray-500 text-sm sm:text-base">No bookmarked jobs yet</p>
+                <button onClick={() => window.location.href = "/"} className="mt-4 px-4 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition">
                   Browse Jobs
                 </button>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bookmarks.map((job) => (
-                  <JobCard key={job.id} job={job} />
-                ))}
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                {bookmarks.map((job) => <JobCard key={job.id} job={job} />)}
               </div>
             )}
           </div>
         )}
 
-        {/* Applied Jobs Section */}
+        {/* Applied Jobs Section - Mobile Optimized */}
         {user?.role === "user" && activeSection === "applied" && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
-                <span className="text-xl">📋</span>
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-lg sm:text-xl">📋</span>
               </div>
-              <h2 className="text-xl font-bold text-gray-800">Applied Jobs</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">Applied Jobs</h2>
             </div>
 
             {appliedJobs.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-3">📭</div>
-                <p className="text-gray-500">No applied jobs yet</p>
-                <button
-                  onClick={() => (window.location.href = "/")}
-                  className="mt-4 px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition"
-                >
+              <div className="text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-5xl mb-3">📭</div>
+                <p className="text-gray-500 text-sm sm:text-base">No applied jobs yet</p>
+                <button onClick={() => window.location.href = "/"} className="mt-4 px-4 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition">
                   Browse Jobs
                 </button>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {appliedJobs.map((job) => (
-                  <JobCard key={job.id} job={job} />
-                ))}
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                {appliedJobs.map((job) => <JobCard key={job.id} job={job} />)}
               </div>
             )}
           </div>
         )}
 
-        {/* Company Jobs Section */}
+        {/* Company Jobs Section - Mobile Optimized */}
         {user?.role === "company" && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
-                  <span className="text-xl">🏢</span>
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-100 to-purple-100 rounded-xl flex items-center justify-center">
+                  <span className="text-lg sm:text-xl">🏢</span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Your Posted Jobs
-                </h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">Your Posted Jobs</h2>
               </div>
-              <button
-                onClick={() => (window.location.href = "/add-job")}
-                className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition shadow-md shadow-orange-200"
-              >
+              <button onClick={() => window.location.href = "/add-job"} className="px-4 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition shadow-md">
                 + Post New Job
               </button>
             </div>
 
             {Object.keys(groupedJobs).length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-3">📭</div>
-                <p className="text-gray-500">No jobs posted yet</p>
-                <button
-                  onClick={() => (window.location.href = "/add-job")}
-                  className="mt-4 px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition"
-                >
+              <div className="text-center py-8 sm:py-12">
+                <div className="text-4xl sm:text-5xl mb-3">📭</div>
+                <p className="text-gray-500 text-sm sm:text-base">No jobs posted yet</p>
+                <button onClick={() => window.location.href = "/add-job"} className="mt-4 px-4 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-xs sm:text-sm font-medium hover:from-orange-600 hover:to-orange-700 transition">
                   Post Your First Job
                 </button>
               </div>
             ) : (
               Object.entries(groupedJobs).map(([date, jobs]) => (
-                <div key={date} className="mb-8 last:mb-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <h3 className="font-medium text-gray-600">{date}</h3>
+                <div key={date} className="mb-6 sm:mb-8 last:mb-0">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full"></div>
+                    <h3 className="text-xs sm:text-sm font-medium text-gray-600">{date}</h3>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {jobs.map((job) => (
-                      <JobCard key={job.id} job={job} />
-                    ))}
+                  <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                    {jobs.map((job) => <JobCard key={job.id} job={job} />)}
                   </div>
                 </div>
               ))
@@ -542,38 +484,21 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* PDF Modal */}
+      {/* PDF Modal - Mobile Optimized */}
       {showPdfModal && user?.cv && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setShowPdfModal(false)}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center p-5 border-b">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-100 to-purple-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm">📄</span>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setShowPdfModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-3 sm:p-5 border-b">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-100 to-purple-100 rounded-lg flex items-center justify-center">
+                  <span className="text-xs sm:text-sm">📄</span>
                 </div>
-                <h3 className="font-semibold text-gray-800">
-                  Resume / CV - {user?.name || "Applicant"}
-                </h3>
+                <h3 className="text-sm sm:text-base font-semibold text-gray-800">Resume / CV - {user?.name || "Applicant"}</h3>
               </div>
-              <button
-                onClick={() => setShowPdfModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl transition"
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowPdfModal(false)} className="text-gray-400 hover:text-gray-600 text-xl sm:text-2xl transition">✕</button>
             </div>
-            <div className="flex-1 p-4">
-              <iframe
-                src={user.cv}
-                className="w-full h-full rounded-xl border"
-                title="PDF Viewer"
-              />
+            <div className="flex-1 p-2 sm:p-4">
+              <iframe src={user.cv} className="w-full h-full rounded-xl border" title="PDF Viewer" />
             </div>
           </div>
         </div>
