@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getJobs } from "../data/jobs";
@@ -16,6 +16,9 @@ export default function Home() {
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [totalApplicants, setTotalApplicants] = useState(0);
+  
+  // Ref for scrolling to search results
+  const resultsRef = useRef(null);
 
   if (user?.role === "company") {
     return <CompanyHome />;
@@ -75,6 +78,13 @@ export default function Home() {
     });
     setFilteredJobs(result);
     setIsSearched(true);
+    
+    // Auto-scroll to search results after a brief delay
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   };
 
   const handleClear = () => {
@@ -94,41 +104,40 @@ export default function Home() {
         {/* HOME TAB */}
         {activeTab === "home" && (
           <>
-            {/* Hero Section - Shows different content for logged in vs non-logged in */}
+            {/* Hero Section */}
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4 px-2 break-words">
                 {user
                   ? "Find Your Dream Internship/Job 🚀"
                   : "Find Jobs or Hire Talent 🚀"}
               </h1>
-              <p className="text-lg text-gray-600 mb-3">
+              <p className="text-base sm:text-lg text-gray-600 mb-3 px-4 break-words">
                 {user
                   ? "Discover thousands of jobs in Kathmandu and beyond"
                   : "Whether you're looking for your next career opportunity or searching for the perfect candidate"}
               </p>
-              {/* For non-logged in users - show dual purpose message */}
+              {/* For non-logged in users - show dual purpose message with responsive layout */}
               {!user && (
-                <div className="flex flex-col items-center justify-center gap-5 mt-6">
-                  <div className="flex items-center gap-3 text-base md:text-lg text-gray-600">
-                    <span className="text-orange-500 text-2xl">🎯</span>
+                <div className="flex flex-col items-center justify-center gap-4 mt-6 px-4">
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base md:text-lg text-gray-600">
+                    <span className="text-orange-500 text-xl sm:text-2xl">🎯</span>
                     <span className="font-semibold">Find Jobs</span>
-                    <span className="text-gray-400 text-xl">•</span>
-                    <span className="text-purple-500 text-2xl">🏢</span>
+                    <span className="text-gray-400 text-lg sm:text-xl">•</span>
+                    <span className="text-purple-500 text-xl sm:text-2xl">🏢</span>
                     <span className="font-semibold">Post Jobs</span>
-
-                    <button
-                      onClick={() => navigate("/signup")}
-                      className="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
-                    >
-                      Get Started
-                    </button>
                   </div>
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="px-6 sm:px-8 py-2 sm:py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200 text-sm sm:text-base"
+                  >
+                    Get Started
+                  </button>
                 </div>
               )}
             </div>
 
             {/* Search Bar */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-12">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -154,10 +163,10 @@ export default function Home() {
                     onChange={(e) => setSearchLocation(e.target.value)}
                   />
                 </div>
-                <div className="flex items-end gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
                   <button
                     onClick={handleSearch}
-                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
+                    className="px-6 sm:px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
                   >
                     🔍 Search Jobs
                   </button>
@@ -174,110 +183,112 @@ export default function Home() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-              <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="text-3xl font-bold text-orange-500 mb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className="text-2xl sm:text-3xl font-bold text-orange-500 mb-2">
                   {totalJobs}+
                 </div>
-                <div className="text-gray-500">Active Jobs</div>
+                <div className="text-gray-500 text-sm sm:text-base">Active Jobs</div>
               </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="text-3xl font-bold text-orange-500 mb-2">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className="text-2xl sm:text-3xl font-bold text-orange-500 mb-2">
                   {totalCompanies}+
                 </div>
-                <div className="text-gray-500">Trusted Companies</div>
+                <div className="text-gray-500 text-sm sm:text-base">Trusted Companies</div>
               </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="text-3xl font-bold text-orange-500 mb-2">
+              <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className="text-2xl sm:text-3xl font-bold text-orange-500 mb-2">
                   {totalApplicants}+
                 </div>
-                <div className="text-gray-500">Happy Applicants</div>
+                <div className="text-gray-500 text-sm sm:text-base">Happy Applicants</div>
               </div>
             </div>
 
-            {/* Search Results or Featured Jobs */}
-            {isSearched ? (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Search Results
-                  </h2>
-                  <p className="text-gray-500">
-                    {filteredJobs.length} jobs found
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredJobs.length === 0 ? (
-                    <div className="col-span-3 text-center py-12">
-                      <p className="text-gray-500 text-lg">
-                        No jobs found. Try different keywords!
-                      </p>
-                    </div>
-                  ) : (
-                    filteredJobs.map((job) => (
-                      <JobCard key={job.id} job={job} />
-                    ))
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Featured Jobs */}
-                <div className="mb-12">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">
-                      ✨ Featured Opportunities
+            {/* Search Results or Featured Jobs*/}
+            <div ref={resultsRef}>
+              {isSearched ? (
+                <>
+                  <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                      Search Results
                     </h2>
-                    <button
-                      onClick={() => setActiveTab("jobs")}
-                      className="text-orange-500 hover:text-orange-600 font-medium"
-                    >
-                      View all →
-                    </button>
+                    <p className="text-gray-500 text-sm sm:text-base">
+                      {filteredJobs.length} jobs found
+                    </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {featuredJobs.length === 0 ? (
-                      <p className="text-center col-span-3 text-gray-500">
-                        No featured jobs
-                      </p>
+                    {filteredJobs.length === 0 ? (
+                      <div className="col-span-3 text-center py-12">
+                        <p className="text-gray-500 text-lg">
+                          No jobs found. Try different keywords!
+                        </p>
+                      </div>
                     ) : (
-                      featuredJobs.map((job) => (
+                      filteredJobs.map((job) => (
                         <JobCard key={job.id} job={job} />
                       ))
                     )}
                   </div>
-                </div>
+                </>
+              ) : (
+                <>
+                  {/* Featured Jobs */}
+                  <div className="mb-12">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                        ✨ Featured Opportunities
+                      </h2>
+                      <button
+                        onClick={() => setActiveTab("jobs")}
+                        className="text-orange-500 hover:text-orange-600 font-medium text-sm sm:text-base"
+                      >
+                        View all →
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {featuredJobs.length === 0 ? (
+                        <p className="text-center col-span-3 text-gray-500">
+                          No featured jobs
+                        </p>
+                      ) : (
+                        featuredJobs.map((job) => (
+                          <JobCard key={job.id} job={job} />
+                        ))
+                      )}
+                    </div>
+                  </div>
 
-                {/* Recent Jobs */}
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">
-                      📋 Recently Posted
-                    </h2>
-                    <button
-                      onClick={() => setActiveTab("jobs")}
-                      className="text-orange-500 hover:text-orange-600 font-medium"
-                    >
-                      Browse all →
-                    </button>
+                  {/* Recent Jobs */}
+                  <div>
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                        📋 Recently Posted
+                      </h2>
+                      <button
+                        onClick={() => setActiveTab("jobs")}
+                        className="text-orange-500 hover:text-orange-600 font-medium text-sm sm:text-base"
+                      >
+                        Browse all →
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sortedJobs.slice(0, 6).map((job) => (
+                        <JobCard key={job.id} job={job} />
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sortedJobs.slice(0, 6).map((job) => (
-                      <JobCard key={job.id} job={job} />
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </>
         )}
 
         {/* JOBS TAB */}
         {activeTab === "jobs" && (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">All Jobs</h2>
-              <p className="text-gray-500">Recently posted first</p>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">All Jobs</h2>
+              <p className="text-gray-500 text-sm sm:text-base">Recently posted first</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedJobs.length === 0 ? (
