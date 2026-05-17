@@ -38,7 +38,8 @@ export default function Home() {
       });
       setTotalCompanies(uniqueCompanies.size);
 
-      const savedApplied = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+      const savedApplied =
+        JSON.parse(localStorage.getItem("appliedJobs")) || [];
       let appliedJobs = Array.isArray(savedApplied) ? savedApplied : [];
       const uniqueApplicants = new Set();
       appliedJobs.forEach((application) => {
@@ -87,7 +88,6 @@ export default function Home() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-        
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
@@ -98,27 +98,13 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="text-3xl font-bold text-orange-500 mb-2">{totalJobs}+</div>
-            <div className="text-gray-500">Active Jobs</div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="text-3xl font-bold text-orange-500 mb-2">{totalCompanies}+</div>
-            <div className="text-gray-500">Trusted Companies</div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="text-3xl font-bold text-orange-500 mb-2">{totalApplicants}+</div>
-            <div className="text-gray-500">Happy Applicants</div>
-          </div>
-        </div>
-
         {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search by Skill</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search by Skill
+              </label>
               <input
                 type="text"
                 placeholder="e.g., React, Node.js, Python"
@@ -128,7 +114,9 @@ export default function Home() {
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Location
+              </label>
               <input
                 type="text"
                 placeholder="e.g., Kathmandu, Pokhara"
@@ -155,18 +143,44 @@ export default function Home() {
             </div>
           </div>
         </div>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">
+              {totalJobs}+
+            </div>
+            <div className="text-gray-500">Active Jobs</div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">
+              {totalCompanies}+
+            </div>
+            <div className="text-gray-500">Trusted Companies</div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="text-3xl font-bold text-orange-500 mb-2">
+              {totalApplicants}+
+            </div>
+            <div className="text-gray-500">Happy Applicants</div>
+          </div>
+        </div>
 
         {/* Content based on tab/search state */}
         {isSearched ? (
           <>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Search Results</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Search Results
+              </h2>
               <p className="text-gray-500">{filteredJobs.length} jobs found</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.length === 0 ? (
                 <div className="col-span-3 text-center py-12">
-                  <p className="text-gray-500 text-lg">No jobs found. Try different keywords!</p>
+                  <p className="text-gray-500 text-lg">
+                    No jobs found. Try different keywords!
+                  </p>
                 </div>
               ) : (
                 filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
@@ -181,7 +195,9 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedJobs.length === 0 ? (
-                <p className="text-center col-span-3 py-12 text-gray-500">No jobs found</p>
+                <p className="text-center col-span-3 py-12 text-gray-500">
+                  No jobs found
+                </p>
               ) : (
                 sortedJobs.map((job) => <JobCard key={job.id} job={job} />)
               )}
@@ -192,8 +208,10 @@ export default function Home() {
             {/* Featured Jobs */}
             <div className="mb-12">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">✨ Featured Opportunities</h2>
-                <button 
+                <h2 className="text-2xl font-bold text-gray-800">
+                  ✨ Featured Opportunities
+                </h2>
+                <button
                   onClick={() => setActiveTab("jobs")}
                   className="text-orange-500 hover:text-orange-600 font-medium"
                 >
@@ -202,7 +220,9 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredJobs.length === 0 ? (
-                  <p className="text-center col-span-3 text-gray-500">No featured jobs</p>
+                  <p className="text-center col-span-3 text-gray-500">
+                    No featured jobs
+                  </p>
                 ) : (
                   featuredJobs.map((job) => <JobCard key={job.id} job={job} />)
                 )}
@@ -212,8 +232,10 @@ export default function Home() {
             {/* Recent Jobs */}
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">📋 Recently Posted</h2>
-                <button 
+                <h2 className="text-2xl font-bold text-gray-800">
+                  📋 Recently Posted
+                </h2>
+                <button
                   onClick={() => setActiveTab("jobs")}
                   className="text-orange-500 hover:text-orange-600 font-medium"
                 >
@@ -238,32 +260,84 @@ export default function Home() {
               <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-3">
                 JobPortal
               </h1>
-              <p className="text-gray-400 text-sm">Find the right job and make your career grow faster.</p>
+              <p className="text-gray-400 text-sm">
+                Find the right job and make your career grow faster.
+              </p>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Explore</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Jobs</a></li>
-                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Companies</a></li>
-                <li><a href="/dashboard" className="text-gray-400 hover:text-orange-400 transition">Dashboard</a></li>
+                <li>
+                  <a
+                    href="/"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Jobs
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Companies
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/dashboard"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Dashboard
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Legal</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Terms</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Privacy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Cookies</a></li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Terms
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Privacy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-orange-400 transition"
+                  >
+                    Cookies
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-3">Contact</h3>
               <p className="text-gray-400 text-sm">support@jobportal.com</p>
               <div className="flex gap-3 mt-3">
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🌐</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🐦</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">💼</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">📸</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
+                  🌐
+                </span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
+                  🐦
+                </span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
+                  💼
+                </span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">
+                  📸
+                </span>
               </div>
             </div>
           </div>

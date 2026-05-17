@@ -4,6 +4,7 @@ import { getUser, logoutUser } from "../utils/auth";
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [user, setUser] = useState(getUser());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
   const handleLogout = () => {
     logoutUser();
     navigate("/");
+    setMobileMenuOpen(false);
   };
 
   const handleLogoClick = () => {
@@ -26,16 +28,19 @@ export default function Navbar({ activeTab, setActiveTab }) {
       navigate("/");
       if (setActiveTab) setActiveTab("home");
     }
+    setMobileMenuOpen(false);
   };
 
   const handleJobsClick = () => {
     if (setActiveTab) setActiveTab("jobs");
     navigate("/");
+    setMobileMenuOpen(false);
   };
 
   const handleHomeClick = () => {
     if (setActiveTab) setActiveTab("home");
     navigate("/");
+    setMobileMenuOpen(false);
   };
 
   const handleDashboardClick = (e) => {
@@ -46,6 +51,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
     } else {
       navigate("/dashboard");
     }
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -61,7 +67,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
             JobPortal
           </h1>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - NO CHANGES */}
           <div className="hidden md:flex items-center gap-8">
             <button
               onClick={handleHomeClick}
@@ -93,7 +99,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </button>
           </div>
 
-          {/* Right Section */}
+          {/* Right Section - NO CHANGES */}
           <div className="flex items-center gap-4">
             {user ? (
               <>
@@ -135,7 +141,76 @@ export default function Navbar({ activeTab, setActiveTab }) {
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Button - NEW */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {/* Mobile Menu - NEW SECTION WITH DASHBOARD BUTTON */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-100">
+            <div className="flex flex-col space-y-3">
+              <button
+                onClick={handleHomeClick}
+                className="px-3 py-2 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition text-left"
+              >
+                Home
+              </button>
+              <button
+                onClick={handleJobsClick}
+                className="px-3 py-2 text-gray-600 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition text-left"
+              >
+                Jobs
+              </button>
+              
+              {/* Dashboard Button - Visible in mobile menu */}
+              <button
+                onClick={handleDashboardClick}
+                className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-left font-medium"
+              >
+                📊 Dashboard
+              </button>
+              
+              {user ? (
+                <>
+                  <div className="px-3 py-2 text-gray-500 text-sm border-t border-gray-100 pt-3 mt-1">
+                    Signed in as <span className="font-medium text-gray-700">{user.role === "company" ? user.companyName : user.name}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition text-left"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-3 pt-2">
+                  <Link to="/login" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full px-3 py-2 text-center border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                      Login
+                    </button>
+                  </Link>
+                  <Link to="/signup" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full px-3 py-2 text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-orange-700 transition">
+                      Sign Up
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
