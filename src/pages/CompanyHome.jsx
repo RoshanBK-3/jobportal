@@ -9,6 +9,7 @@ import { supabase } from "../supabaseClient";
 export default function CompanyHome() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [activeTab, setActiveTab] = useState("home");
   const [applications, setApplications] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplicantsModal, setShowApplicantsModal] = useState(false);
@@ -16,6 +17,8 @@ export default function CompanyHome() {
   const [showApplicantDetailModal, setShowApplicantDetailModal] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [companyJobs, setCompanyJobs] = useState([]);
+  const [allJobs, setAllJobs] = useState([]);
+  const [sortedJobs, setSortedJobs] = useState([]);
 
   const openPDF = (base64Data) => {
     if (!base64Data) {
@@ -48,6 +51,17 @@ export default function CompanyHome() {
     }
   };
 
+  // Load all jobs for the Jobs tab
+  useEffect(() => {
+    const loadAllJobs = async () => {
+      const jobs = await getJobs();
+      setAllJobs(jobs);
+      setSortedJobs([...jobs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    };
+    loadAllJobs();
+  }, []);
+
+  // Load company specific data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -128,243 +142,334 @@ export default function CompanyHome() {
     setShowApplicantDetailModal(true);
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  // Stats data
+  const stats = [
+    { icon: "📊", value: companyJobs.length, label: "Jobs Posted" },
+    { icon: "👥", value: applications.length, label: "Total Applicants" },
+    { icon: "⭐", value: companyJobs.filter(job => job.status !== "closed").length, label: "Active Jobs" }
+  ];
+
+  // Modal component
+  const Modal = ({ isOpen, onClose, title, children }) => {
+    if (!isOpen) return null;
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="sticky top-0 bg-white border-b p-5 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+          </div>
+          <div className="p-6">{children}</div>
+          <div className="sticky bottom-0 bg-gray-50 border-t p-4 flex justify-end">
+            <button onClick={onClose} className="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-purple-50">
-      <Navbar />
+      <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-            Company Dashboard 🏢
-          </h1>
-          <p className="text-gray-600">Manage your job postings and review applicants</p>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        {/* ========== HOME TAB ========== */}
+        {activeTab === "home" && (
+          <>
+            {/* Welcome Header*/}
+            <div className="mb-5">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+                Welcome Back! 👋
+              </h1>
+              <p className="text-gray-500 text-sm">
+                {user?.email} • <span className="text-orange-600 font-semibold">Company Account</span>
+              </p>
+            </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 mb-10">
-          <button
-            onClick={() => navigate("/add-job")}
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-md shadow-orange-200"
-          >
-            + Post New Job
-          </button>
-          <button
-            onClick={() => navigate("/company-jobs")}
-            className="px-6 py-3 bg-white text-gray-700 rounded-xl font-semibold border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
-          >
-            📋 Manage Jobs
-          </button>
-        </div>
-
-        {/* Your Posted Jobs Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Posted Jobs</h2>
-          <p className="text-gray-500">Manage and track applicants for each position</p>
-        </div>
-
-        {companyJobs.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">📭</div>
-            <p className="text-gray-500 text-lg mb-4">No jobs posted yet.</p>
-            <button
-              onClick={() => navigate("/add-job")}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
-            >
-              Post Your First Job
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
-            {companyJobs.map((job) => {
-              const applicantCount = getApplicantsForJob(job.id).length;
-              return (
-                <div key={job.id} className="relative">
-                  <JobCard job={job} />
-                  <button
-                    onClick={() => handleViewApplicants(job)}
-                    className="mt-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium shadow-md shadow-orange-200"
-                  >
-                    👥 View Applicants ({applicantCount})
-                  </button>
+            {/* Hero Section*/}
+            <div className="bg-gradient-to-r from-orange-500 to-purple-600 rounded-xl p-5 mb-6 text-white">
+              <div className="flex justify-between items-center flex-wrap gap-3">
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold mb-1">Find the Best Talent for Your Company</h2>
+                  <p className="text-orange-100 text-xs">Post jobs, review applications, and connect with qualified candidates.</p>
                 </div>
-              );
-            })}
-          </div>
+                <button
+                  onClick={() => navigate("/add-job")}
+                  className="bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition text-sm whitespace-nowrap"
+                >
+                  + Post a New Job
+                </button>
+              </div>
+            </div>
+
+            {/* Stats Cards*/}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="bg-white rounded-lg shadow p-3 flex items-center gap-3 hover:shadow-md transition">
+                  <span className="text-3xl">{stat.icon}</span>
+                  <div>
+                    <div className="text-xl font-bold text-gray-800">{stat.value}</div>
+                    <div className="text-xs text-gray-500">{stat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Actions*/}
+            <div className="mb-8">
+              <h2 className="text-base font-bold text-gray-800 mb-3">Quick Actions</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleTabChange("dashboard")}
+                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow hover:shadow-md transition group"
+                >
+                  <span className="text-xl">📋</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 group-hover:text-orange-600 transition text-sm">Go to Dashboard</p>
+                    <p className="text-xs text-gray-500">Manage your jobs and applicants</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleTabChange("jobs")}
+                  className="flex items-center gap-3 p-3 bg-white rounded-lg shadow hover:shadow-md transition group"
+                >
+                  <span className="text-xl">💼</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 group-hover:text-orange-600 transition text-sm">Browse Jobs</p>
+                    <p className="text-xs text-gray-500">View all available positions</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Your Recent Jobs */}
+            {companyJobs.length > 0 && (
+              <>
+                <h2 className="text-lg font-bold text-gray-800 mb-3">Your Recent Jobs</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {companyJobs.slice(0, 3).map((job) => (
+                    <div key={job.id}>
+                      <JobCard job={job} />
+                      <button
+                        onClick={() => handleViewApplicants(job)}
+                        className="mt-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-1.5 rounded-lg hover:from-orange-600 transition font-medium text-sm"
+                      >
+                        👥 View Applicants ({getApplicantsForJob(job.id).length})
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {companyJobs.length === 0 && (
+              <div className="bg-white rounded-lg shadow p-6 text-center">
+                <div className="text-4xl mb-2">📭</div>
+                <p className="text-gray-500 text-sm mb-3">No jobs posted yet.</p>
+                <button onClick={() => navigate("/add-job")} className="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold text-sm">
+                  Post Your First Job
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ========== DASHBOARD TAB ========== */}
+        {activeTab === "dashboard" && (
+          <>
+            <div className="mb-6">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+                Company Dashboard 🏢
+              </h1>
+              <p className="text-gray-500 text-sm">Manage your job postings and review applicants</p>
+            </div>
+
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={() => navigate("/add-job")}
+                className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition shadow-md text-sm"
+              >
+                + Post New Job
+              </button>
+              <button
+                onClick={() => navigate("/company-jobs")}
+                className="px-5 py-2 bg-white text-gray-700 rounded-lg font-semibold border border-gray-200 hover:bg-gray-50 hover:shadow-md transition text-sm"
+              >
+                📋 Manage Jobs
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-800 mb-1">Your Posted Jobs</h2>
+              <p className="text-gray-500 text-sm">Manage and track applicants for each position</p>
+            </div>
+
+            {companyJobs.length === 0 ? (
+              <div className="bg-white rounded-xl shadow p-8 text-center">
+                <div className="text-5xl mb-3">📭</div>
+                <p className="text-gray-500 text-md mb-3">No jobs posted yet.</p>
+                <button
+                  onClick={() => navigate("/add-job")}
+                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold text-sm"
+                >
+                  Post Your First Job
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-8">
+                {companyJobs.map((job) => {
+                  const applicantCount = getApplicantsForJob(job.id).length;
+                  return (
+                    <div key={job.id} className="relative">
+                      <JobCard job={job} />
+                      <button
+                        onClick={() => handleViewApplicants(job)}
+                        className="mt-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-1.5 rounded-lg hover:from-orange-600 hover:to-orange-700 transition font-medium text-sm shadow-md"
+                      >
+                        👥 View Applicants ({applicantCount})
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/*JOBS TAB - ONLY JOBS*/}
+        {activeTab === "jobs" && (
+          <>
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-xl font-bold text-gray-800">All Jobs</h2>
+              <p className="text-gray-500 text-xs">Recently posted first</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {sortedJobs.length === 0 ? (
+                <p className="text-center col-span-3 py-8 text-gray-500">No jobs found</p>
+              ) : (
+                sortedJobs.map((job) => <JobCard key={job.id} job={job} />)
+              )}
+            </div>
+          </>
         )}
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <footer className="bg-slate-900 border-t border-slate-800 mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-3">
+              <h1 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-purple-400 bg-clip-text text-transparent mb-2">
                 JobPortal
               </h1>
-              <p className="text-gray-400 text-sm">Find the right job and make your career grow faster.</p>
+              <p className="text-gray-400 text-xs">Find the right job and make your career grow faster.</p>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-3">Explore</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Jobs</a></li>
-                <li><a href="/" className="text-gray-400 hover:text-orange-400 transition">Companies</a></li>
-                <li><a href="/dashboard" className="text-gray-400 hover:text-orange-400 transition">Dashboard</a></li>
+              <h3 className="text-white font-semibold mb-2 text-sm">Explore</h3>
+              <ul className="space-y-1 text-xs">
+                <li><button onClick={() => handleTabChange("jobs")} className="text-gray-400 hover:text-orange-400 transition">Jobs</button></li>
+                <li><button onClick={() => handleTabChange("home")} className="text-gray-400 hover:text-orange-400 transition">Home</button></li>
+                <li><button onClick={() => handleTabChange("dashboard")} className="text-gray-400 hover:text-orange-400 transition">Dashboard</button></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-3">Legal</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="text-white font-semibold mb-2 text-sm">Legal</h3>
+              <ul className="space-y-1 text-xs">
                 <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Terms</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Privacy</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-orange-400 transition">Cookies</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-3">Contact</h3>
-              <p className="text-gray-400 text-sm">support@jobportal.com</p>
-              <div className="flex gap-3 mt-3">
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🌐</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">🐦</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">💼</span>
-                <span className="text-gray-500 hover:text-orange-400 cursor-pointer transition">📸</span>
+              <h3 className="text-white font-semibold mb-2 text-sm">Contact</h3>
+              <p className="text-gray-400 text-xs">support@jobportal.com</p>
+              <div className="flex gap-2 mt-2">
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">🌐</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">🐦</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">💼</span>
+                <span className="text-gray-500 hover:text-orange-400 cursor-pointer text-sm">📸</span>
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-6 text-center text-xs text-gray-500">
+          <div className="border-t border-gray-800 mt-5 pt-4 text-center text-[10px] text-gray-500">
             © 2026 Job Portal. All rights reserved.
           </div>
         </div>
       </footer>
 
       {/* Applicants Modal */}
-      {showApplicantsModal && selectedJob && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setShowApplicantsModal(false)}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b rounded-t-2xl p-5 flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">Applicants for</h2>
-                <p className="text-orange-600 font-semibold">{selectedJob.title}</p>
-                <p className="text-sm text-gray-500">{selectedJob.company} • {selectedJob.location}</p>
-              </div>
-              <button onClick={() => setShowApplicantsModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl transition">✕</button>
-            </div>
-            <div className="p-6">
-              {(() => {
-                const jobApplicants = getApplicantsForJob(selectedJob.id);
-                if (jobApplicants.length === 0) {
-                  return (
-                    <div className="text-center py-12">
-                      <div className="text-5xl mb-3">📭</div>
-                      <p className="text-gray-500">No applicants yet for this position.</p>
-                    </div>
-                  );
-                }
+      <Modal isOpen={showApplicantsModal} onClose={() => setShowApplicantsModal(false)} title={`Applicants for ${selectedJob?.title}`}>
+        {selectedJob && (() => {
+          const jobApplicants = getApplicantsForJob(selectedJob.id);
+          if (jobApplicants.length === 0) return <div className="text-center py-8"><div className="text-5xl mb-2">📭</div><p>No applicants yet.</p></div>;
+          return (
+            <div className="space-y-3">
+              {jobApplicants.map((app, idx) => {
+                const applicant = getApplicantDetails(app.applied_by);
                 return (
-                  <div className="space-y-4">
-                    {jobApplicants.map((application, idx) => {
-                      const applicant = getApplicantDetails(application.applied_by);
-                      return (
-                        <div key={idx} className="border rounded-xl p-4 hover:shadow-lg transition-all duration-200">
-                          <div className="flex items-center gap-4">
-                            {applicant?.profilePic ? (
-                              <img src={applicant.profilePic} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-orange-200" />
-                            ) : (
-                              <div className="w-14 h-14 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">👤</span>
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg">{applicant?.name || application.applied_by}</h3>
-                              <p className="text-sm text-gray-500">{application.applied_by}</p>
-                              <p className="text-xs text-gray-400 mt-1">Applied on: {new Date(application.applied_at).toLocaleDateString()}</p>
-                            </div>
-                            <button
-                              onClick={() => handleViewApplicantDetail(application.applied_by)}
-                              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-purple-700 transition text-sm"
-                            >
-                              View Details
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div key={idx} className="border rounded-lg p-3 hover:shadow-md transition">
+                    <div className="flex items-center gap-3">
+                      {applicant?.profilePic ? (
+                        <img src={applicant.profilePic} alt="Profile" className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center text-xl">👤</div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{applicant?.name || app.applied_by}</h3>
+                        <p className="text-xs text-gray-500">{app.applied_by}</p>
+                        <p className="text-xs text-gray-400">Applied: {new Date(app.applied_at).toLocaleDateString()}</p>
+                      </div>
+                      <button onClick={() => handleViewApplicantDetail(app.applied_by)} className="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-purple-600">
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 );
-              })()}
+              })}
             </div>
-            <div className="sticky bottom-0 bg-gray-50 border-t rounded-b-2xl p-4 flex justify-end">
-              <button onClick={() => setShowApplicantsModal(false)} className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        })()}
+      </Modal>
 
       {/* Applicant Details Modal */}
-      {showApplicantDetailModal && selectedApplicant && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-          onClick={() => setShowApplicantDetailModal(false)}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b rounded-t-2xl p-5 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-800">Applicant Details</h2>
-              <button onClick={() => setShowApplicantDetailModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl transition">✕</button>
-            </div>
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-6 items-start border-b pb-6 mb-6">
-                <div className="flex-shrink-0">
-                  {selectedApplicant.profilePic ? (
-                    <img src={selectedApplicant.profilePic} alt="Profile" className="w-28 h-28 rounded-full object-cover border-4 border-orange-200" />
-                  ) : (
-                    <div className="w-28 h-28 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-gray-400 text-4xl">👤</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{selectedApplicant.name || "Student Name"}</h3>
-                  <p className="text-gray-600 mb-1 flex items-center gap-2">📧 {selectedApplicant.email}</p>
-                  {selectedApplicant.phone && <p className="text-gray-600 mb-1 flex items-center gap-2">📞 {selectedApplicant.phone}</p>}
-                  {selectedApplicant.age && <p className="text-gray-600 mb-1 flex items-center gap-2">🎂 Age: {selectedApplicant.age}</p>}
-                  {selectedApplicant.gender && <p className="text-gray-600 mb-1 flex items-center gap-2">⚥ Gender: {selectedApplicant.gender}</p>}
-                </div>
-              </div>
-              <div className="mb-6">
-                <h3 className="font-semibold text-lg mb-3">Resume / CV</h3>
-                {selectedApplicant.cv ? (
-                  <button
-                    onClick={() => openPDF(selectedApplicant.cv)}
-                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-200 rounded-xl p-4 hover:from-purple-100 hover:to-purple-200 transition"
-                  >
-                    <span className="text-3xl">📄</span>
-                    <div>
-                      <p className="font-semibold text-purple-700">View Resume</p>
-                      <p className="text-sm text-gray-500">Click to open PDF in new tab</p>
-                    </div>
-                  </button>
+      <Modal isOpen={showApplicantDetailModal} onClose={() => setShowApplicantDetailModal(false)} title="Applicant Details">
+        {selectedApplicant && (
+          <>
+            <div className="flex flex-col md:flex-row gap-5 items-start border-b pb-5 mb-5">
+              <div className="flex-shrink-0">
+                {selectedApplicant.profilePic ? (
+                  <img src={selectedApplicant.profilePic} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-orange-200" />
                 ) : (
-                  <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-200">
-                    <p className="text-gray-500">No CV uploaded yet</p>
-                  </div>
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-purple-100 rounded-full flex items-center justify-center text-3xl">👤</div>
                 )}
               </div>
+              <div>
+                <h3 className="text-xl font-bold">{selectedApplicant.name || "Student Name"}</h3>
+                <p className="text-gray-600 text-sm">📧 {selectedApplicant.email}</p>
+                {selectedApplicant.phone && <p className="text-gray-600 text-sm">📞 {selectedApplicant.phone}</p>}
+                {selectedApplicant.age && <p className="text-gray-600 text-sm">🎂 Age: {selectedApplicant.age}</p>}
+                {selectedApplicant.gender && <p className="text-gray-600 text-sm">⚥ Gender: {selectedApplicant.gender}</p>}
+              </div>
             </div>
-            <div className="sticky bottom-0 bg-gray-50 border-t rounded-b-2xl p-4 flex justify-end">
-              <button onClick={() => setShowApplicantDetailModal(false)} className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Close</button>
+            <div>
+              <h3 className="font-semibold mb-2">Resume / CV</h3>
+              {selectedApplicant.cv ? (
+                <button onClick={() => openPDF(selectedApplicant.cv)} className="w-full flex items-center justify-center gap-2 bg-purple-50 border-2 border-purple-200 rounded-lg p-3 hover:bg-purple-100 transition">
+                  <span className="text-2xl">📄</span>
+                  <span className="font-semibold text-purple-700">View Resume</span>
+                </button>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-500">No CV uploaded yet</div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

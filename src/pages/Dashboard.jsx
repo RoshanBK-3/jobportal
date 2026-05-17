@@ -246,7 +246,7 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* User Info - Name and Role only (NO EMAIL HERE) */}
+              {/* User Info - Name and Role */}
               <div className="flex-1 mt-2">
                 <h1 className="text-2xl font-bold text-gray-800">
                   {displayName()}
